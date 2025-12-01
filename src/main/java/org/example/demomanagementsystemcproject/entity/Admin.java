@@ -1,0 +1,120 @@
+package org.example.demomanagementsystemcproject.entity;
+
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "admin")
+public class Admin {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    /** 登录账号 */
+    @Column(name = "username", nullable = false, unique = true, length = 255)
+    private String username;
+
+    /** 登录密码（已加密或明文） */
+    @Column(name = "password", nullable = false, length = 255)
+    private String password;
+
+    /** 角色：ADMIN / MANAGER / STAFF 等 */
+    @Column(name = "role", length = 50)
+    private String role;
+
+    /** 账号状态：1 启用，0 禁用 */
+    @Column(name = "status")
+    private Integer status;
+
+    /** 所属门店 ID（多门店支持） */
+    @Column(name = "store_id")
+    private Long storeId;
+
+    /** 创建时间 */
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    /** 更新时间 */
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    /* ------------ 生命周期回调：自动填充时间 ------------ */
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    /* ------------ getter / setter ------------ */
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
+
+    public Long getStoreId() {
+        return storeId;
+    }
+
+    public void setStoreId(Long storeId) {
+        this.storeId = storeId;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+}

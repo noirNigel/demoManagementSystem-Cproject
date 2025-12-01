@@ -1,0 +1,243 @@
+package org.example.demomanagementsystemcproject.service.impl;
+
+import org.example.demomanagementsystemcproject.dto.*;
+import org.example.demomanagementsystemcproject.entity.OrderEntity;
+import org.example.demomanagementsystemcproject.entity.OrderItemEntity;
+import org.example.demomanagementsystemcproject.repo.OrderRepository;
+import org.example.demomanagementsystemcproject.repo.OrderItemRepository;
+import org.example.demomanagementsystemcproject.service.OrderService;
+import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.persistence.criteria.Predicate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class OrderServiceImpl implements OrderService {
+
+    private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
+
+    public OrderServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository) {
+        this.orderRepository = orderRepository;
+        this.orderItemRepository = orderItemRepository;
+    }
+
+    @Override
+    public Page<OrderDTO> getOrders(OrderQueryDTO query) {
+        Pageable pageable = PageRequest.of(query.getPage() - 1, query.getSize());
+
+        Specification<OrderEntity> spec = (root, criteriaQuery, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (query.getOrderNo() != null && !query.getOrderNo().isEmpty()) {
+                predicates.add(criteriaBuilder.like(root.get("orderNo"), "%" + query.getOrderNo() + "%"));
+            }
+
+            if (query.getCustomerName() != null && !query.getCustomerName().isEmpty()) {
+                predicates.add(criteriaBuilder.like(root.get("customerName"), "%" + query.getCustomerName() + "%"));
+            }
+
+            if (query.getCustomerPhone() != null && !query.getCustomerPhone().isEmpty()) {
+                predicates.add(criteriaBuilder.like(root.get("customerPhone"), "%" + query.getCustomerPhone() + "%"));
+            }
+
+            if (query.getStatus() != null && !query.getStatus().isEmpty()) {
+                predicates.add(criteriaBuilder.equal(root.get("status"), query.getStatus()));
+            }
+
+            if (query.getPayStatus() != null && !query.getPayStatus().isEmpty()) {
+                predicates.add(criteriaBuilder.equal(root.get("payStatus"), query.getPayStatus()));
+            }
+
+            if (query.getStartDate() != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("createdAt"), query.getStartDate()));
+            }
+
+            if (query.getEndDate() != null) {
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("createdAt"), query.getEndDate()));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return orderRepository.findAll(spec, pageable).map(this::convertToDTO);
+    }
+
+    @Override
+    public OrderDTO getOrderById(Long id) {
+        OrderEntity entity = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("订单不存在"));
+        return convertToDTO(entity);
+    }
+
+    @Override
+    public OrderDTO getOrderByNo(String orderNo) {
+        OrderEntity entity = orderRepository.findByOrderNo(orderNo);
+        if (entity == null) {
+            throw new RuntimeException("订单不存在");
+        }
+        return convertToDTO(entity);
+    }
+
+    @Override
+    @Transactional
+    public void confirmOrder(Long id) {
+        OrderEntity entity = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("订单不存在"));
+
+        if (!"NEW".equals(entity.getStatus())) {
+            throw new RuntimeException("只能确认新订单");
+        }
+
+        entity.setStatus("CONFIRMED");
+        entity.setConfirmedTime(LocalDateTime.now());
+        orderRepository.save(entity);
+    }
+
+    @Override
+    @Transactional
+    public void batchConfirmOrders(List<Long> ids) {
+        for (Long id : ids) {
+            confirmOrder(id);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void completeOrder(Long id) {
+        OrderEntity entity = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("订单不存在"));
+
+        if (!"CONFIRMED".equals(entity.getStatus())) {
+            throw new RuntimeException("只能完成已确认的订单");
+        }
+
+        entity.setStatus("COMPLETED");
+        entity.setCompletedTime(LocalDateTime.now());
+        orderRepository.save(entity);
+    }
+
+    @Override
+    @Transactional
+    public void cancelOrder(Long id, String reason) {
+        OrderEntity entity = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("订单不存在"));
+
+        if ("COMPLETED".equals(entity.getStatus()) || "CANCELLED".equals(entity.getStatus())) {
+            throw new RuntimeException("不能取消已完成或已取消的订单");
+        }
+
+        entity.setStatus("CANCELLED");
+        entity.setCancelledTime(LocalDateTime.now());
+        orderRepository.save(entity);
+    }
+
+    @Override
+    @Transactional
+    public void requestRefund(RefundRequestDTO request) {
+        OrderEntity entity = orderRepository.findById(request.getOrderId())
+                .orElseThrow(() -> new RuntimeException("订单不存在"));
+
+        if (!"COMPLETED".equals(entity.getStatus())) {
+            throw new RuntimeException("只能对已完成的订单申请退款");
+        }
+
+        entity.setStatus("REFUNDING");
+        entity.setRefundReason(request.getRefundReason());
+        entity.setRefundAmount(request.getRefundAmount());
+        orderRepository.save(entity);
+    }
+
+    @Override
+    @Transactional
+    public void approveRefund(Long orderId) {
+        OrderEntity entity = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("订单不存在"));
+
+        if (!"REFUNDING".equals(entity.getStatus())) {
+            throw new RuntimeException("只能审核退款中的订单");
+        }
+
+        entity.setStatus("REFUNDED");
+        entity.setPayStatus("REFUNDED");
+        entity.setRefundTime(LocalDateTime.now());
+        orderRepository.save(entity);
+    }
+
+    @Override
+    @Transactional
+    public void rejectRefund(Long orderId, String reason) {
+        OrderEntity entity = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("订单不存在"));
+
+        if (!"REFUNDING".equals(entity.getStatus())) {
+            throw new RuntimeException("只能拒绝退款中的订单");
+        }
+
+        entity.setStatus("COMPLETED");
+        entity.setRefundReason(reason);
+        orderRepository.save(entity);
+    }
+
+    @Override
+    public List<OrderDTO> getNewOrderAlerts() {
+        LocalDateTime sinceTime = LocalDateTime.now().minusMinutes(5);
+        List<OrderEntity> newOrders = orderRepository.findNewOrdersSince(sinceTime);
+        return newOrders.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public byte[] exportOrders(OrderQueryDTO query) {
+        // 简化的导出实现 - 实际项目中可以使用Apache POI或EasyExcel
+        List<OrderDTO> orders = getOrders(query).getContent();
+
+        // 构建CSV内容
+        StringBuilder csv = new StringBuilder();
+        csv.append("订单号,客户姓名,手机号,金额,状态,支付状态,创建时间\n");
+
+        for (OrderDTO order : orders) {
+            csv.append(String.format("%s,%s,%s,%.2f,%s,%s,%s\n",
+                    order.getOrderNo(),
+                    order.getCustomerName() != null ? order.getCustomerName() : "",
+                    order.getCustomerPhone() != null ? order.getCustomerPhone() : "",
+                    order.getTotalAmount().doubleValue(),
+                    order.getStatus(),
+                    order.getPayStatus(),
+                    order.getCreatedAt().toString()
+            ));
+        }
+
+        return csv.toString().getBytes();
+    }
+
+    private OrderDTO convertToDTO(OrderEntity entity) {
+        OrderDTO dto = new OrderDTO();
+        BeanUtils.copyProperties(entity, dto);
+
+        // 加载订单项
+        List<OrderItemEntity> items = orderItemRepository.findByOrderId(entity.getId());
+        List<OrderItemDTO> itemDTOs = items.stream()
+                .map(this::convertItemToDTO)
+                .collect(Collectors.toList());
+        dto.setItems(itemDTOs);
+
+        return dto;
+    }
+
+    private OrderItemDTO convertItemToDTO(OrderItemEntity entity) {
+        OrderItemDTO dto = new OrderItemDTO();
+        BeanUtils.copyProperties(entity, dto);
+        return dto;
+    }
+}
