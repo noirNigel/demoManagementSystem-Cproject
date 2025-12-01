@@ -2,6 +2,7 @@ package org.example.demomanagementsystemcproject.util;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -11,13 +12,20 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    // ⭐ 至少 32 字节（256 bit），不要再用太短导致 WeakKeyException
-    private static final String SECRET = "ThisIsAVeryStrongJwtSecretKey_2025_123456";
+    private final String secret;
     // 过期时间：24 小时
     private static final long EXPIRATION = 24 * 60 * 60 * 1000L;
 
+    public JwtUtil(@Value("${jwt.secret}") String secret) {
+        byte[] secretBytes = secret.getBytes(StandardCharsets.UTF_8);
+        if (secretBytes.length < 32) {
+            throw new IllegalStateException("jwt.secret must be at least 32 bytes long to sign HS256 tokens.");
+        }
+        this.secret = secret;
+    }
+
     private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
+        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
     // 生成 token
