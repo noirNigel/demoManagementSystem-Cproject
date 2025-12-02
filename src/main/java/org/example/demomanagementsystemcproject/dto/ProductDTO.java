@@ -17,7 +17,7 @@ public class ProductDTO {
     private String categoryPath;
     private String recipe;
 
-    @JsonAlias("imageUrl")
+    @JsonAlias({"imageUrl", "image_url"})
     private String image;
 
     @JsonAlias("desc")
