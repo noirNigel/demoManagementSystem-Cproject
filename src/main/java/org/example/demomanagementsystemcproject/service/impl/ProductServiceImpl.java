@@ -78,7 +78,7 @@ public class ProductServiceImpl implements ProductService {
         }
 
         ProductEntity entity = new ProductEntity();
-        BeanUtils.copyProperties(productDTO, entity);
+        applyDtoToEntity(productDTO, entity);
         ProductEntity saved = productRepository.save(entity);
         return convertToDTO(saved);
     }
@@ -95,7 +95,7 @@ public class ProductServiceImpl implements ProductService {
             throw new RuntimeException("SKU已存在");
         }
 
-        BeanUtils.copyProperties(productDTO, entity, "id", "createdAt");
+        applyDtoToEntity(productDTO, entity);
         ProductEntity saved = productRepository.save(entity);
         return convertToDTO(saved);
     }
@@ -163,6 +163,21 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.findLowStockProducts().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+
+    private void applyDtoToEntity(ProductDTO dto, ProductEntity entity) {
+        entity.setName(dto.getName());
+        entity.setSku(dto.getSku());
+        entity.setPrice(dto.getPrice());
+        entity.setCost(dto.getCost());
+        entity.setStock(dto.getStock());
+        entity.setWarningThreshold(dto.getWarningThreshold());
+        entity.setStatus(dto.getStatus());
+        entity.setCategoryId(dto.getCategoryId());
+        entity.setCategoryPath(dto.getCategoryPath());
+        entity.setRecipe(dto.getRecipe());
+        entity.setImage(dto.getImage());
+        entity.setDescription(dto.getDescription());
     }
 
     private ProductDTO convertToDTO(ProductEntity entity) {

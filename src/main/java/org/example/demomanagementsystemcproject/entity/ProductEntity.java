@@ -34,12 +34,15 @@ public class ProductEntity {
     @Column(name = "category_path")
     private String categoryPath;
 
+    @Lob
     @Column(columnDefinition = "TEXT")
     private String recipe;
 
+    @Lob
     @Column(name = "image", columnDefinition = "LONGTEXT")
     private String image;
 
+    @Lob
     @Column(columnDefinition = "TEXT")
     private String description;
 
