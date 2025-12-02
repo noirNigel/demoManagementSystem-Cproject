@@ -37,7 +37,7 @@ public class ProductEntity {
     @Column(columnDefinition = "TEXT")
     private String recipe;
 
-    @Column(name = "image", length = 512)
+    @Column(name = "image", columnDefinition = "LONGTEXT")
     private String image;
 
     @Column(columnDefinition = "TEXT")
