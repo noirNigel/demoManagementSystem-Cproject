@@ -35,12 +35,16 @@ public class ProductEntity {
     // @Column(name = "category_path")
     // private String categoryPath;
 
-    // @Column(columnDefinition = "TEXT")
-    // private String recipe;
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
+    private String recipe;
 
-    // private String image;
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
+    private String image;
 
-    // private String description;
+    @Column(columnDefinition = "TEXT")
+    private String description;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -95,12 +99,15 @@ public class ProductEntity {
     // 移除新增字段的getter/setter
     // public String getCategoryPath() { return categoryPath; }
     // public void setCategoryPath(String categoryPath) { this.categoryPath = categoryPath; }
-    // public String getRecipe() { return recipe; }
-    // public void setRecipe(String recipe) { this.recipe = recipe; }
-    // public String getImage() { return image; }
-    // public void setImage(String image) { this.image = image; }
-    // public String getDescription() { return description; }
-    // public void setDescription(String description) { this.description = description; }
+
+    public String getRecipe() { return recipe; }
+    public void setRecipe(String recipe) { this.recipe = recipe; }
+
+    public String getImage() { return image; }
+    public void setImage(String image) { this.image = image; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
     // public LocalDateTime getUpdatedAt() { return updatedAt; }
     // public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }
