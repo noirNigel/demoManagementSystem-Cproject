@@ -40,7 +40,7 @@ public class ProductEntity {
     private String recipe;
 
     @Lob
-    @Column(columnDefinition = "LONGTEXT")
+    @Column(name = "image_url", columnDefinition = "LONGTEXT")
     private String image;
 
     @Column(columnDefinition = "TEXT")

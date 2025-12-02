@@ -1,5 +1,6 @@
 package org.example.demomanagementsystemcproject.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import java.math.BigDecimal;
 
 public class ProductDTO {
@@ -15,7 +16,11 @@ public class ProductDTO {
     private String categoryName;
     private String categoryPath;
     private String recipe;
+
+    @JsonAlias("imageUrl")
     private String image;
+
+    @JsonAlias("desc")
     private String description;
 
     // getters and setters
