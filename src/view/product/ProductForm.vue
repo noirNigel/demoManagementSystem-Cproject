@@ -268,12 +268,40 @@ const loadProductDetail = async () => {
   }
 }
 
-// 图片上传处理
+// 本地数据库 image 字段通常为 VARCHAR(512)，避免 Base64 过长导致插入失败
+const MAX_IMAGE_LENGTH = 500
+
+// 将图片压缩到较小尺寸/质量，再转成 Base64，长度超限时给出提示
 const handleImageChange = (file) => {
-  // 这里简化处理，实际项目中需要上传到服务器
   const reader = new FileReader()
   reader.onload = (e) => {
-    formData.image = e.target.result
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      const maxSize = 300 // 限制尺寸，减小 Base64 长度
+      let { width, height } = img
+
+      if (width > height && width > maxSize) {
+        height = (height * maxSize) / width
+        width = maxSize
+      } else if (height > maxSize) {
+        width = (width * maxSize) / height
+        height = maxSize
+      }
+
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(img, 0, 0, width, height)
+
+      const compressed = canvas.toDataURL('image/jpeg', 0.7)
+      if (compressed.length > MAX_IMAGE_LENGTH) {
+        ElMessage.warning('图片过大，请改用更小的图片或使用图片链接')
+        return
+      }
+      formData.image = compressed
+    }
+    img.src = e.target.result
   }
   reader.readAsDataURL(file.raw)
 }

@@ -176,6 +176,12 @@ public class ProductServiceImpl implements ProductService {
         entity.setCategoryId(dto.getCategoryId());
         entity.setCategoryPath(dto.getCategoryPath());
         entity.setRecipe(dto.getRecipe());
+        // 数据库 image 字段为可变长字符（本地库通常是 VARCHAR/512 左右），
+        // 在入库前做长度限制，避免出现 Data too long 错误。
+        if (dto.getImage() != null && dto.getImage().length() > 500) {
+            throw new RuntimeException("图片内容过长，请使用图片链接或压缩后再上传");
+        }
+
         entity.setImage(dto.getImage());
         entity.setDescription(dto.getDescription());
     }
