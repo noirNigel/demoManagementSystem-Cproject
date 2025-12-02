@@ -249,7 +249,19 @@ const loadCategoryTree = async () => {
 const loadProductDetail = async () => {
   try {
     const response = await api.get(`/api/products/${route.params.id}`)
-    Object.assign(formData, response)
+
+    // 兼容后端返回的不同字段命名，确保图片与描述能够正常回显
+    formData.name = response.name || ''
+    formData.sku = response.sku || ''
+    formData.categoryId = response.categoryId || null
+    formData.status = response.status ?? 1
+    formData.price = response.price ?? 0
+    formData.cost = response.cost ?? 0
+    formData.stock = response.stock ?? 0
+    formData.warningThreshold = response.warningThreshold ?? 10
+    formData.image = response.image || response.imageUrl || ''
+    formData.description = response.description || response.desc || ''
+    formData.recipe = response.recipe || ''
   } catch (error) {
     console.error('加载商品详情失败:', error)
     ElMessage.error('加载商品详情失败')
@@ -274,6 +286,10 @@ const handleSave = async () => {
     loading.value = true
 
     const submitData = { ...formData }
+
+    // 同步可能存在的后端字段命名差异
+    submitData.imageUrl = submitData.image
+    submitData.desc = submitData.description
     if (Array.isArray(submitData.categoryId)) {
       submitData.categoryId = submitData.categoryId[submitData.categoryId.length - 1]
     }
