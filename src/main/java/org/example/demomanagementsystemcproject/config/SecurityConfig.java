@@ -32,8 +32,10 @@ public class SecurityConfig {
                                 "/api/categories/**",
                                 "/api/products/**",
                                 "/api/promotions/**",
-                                "/api/marketing/promotions/**"
+                                "/api/marketing/promotions/**",
+                                "/api/orders/no/**"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/orders").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .anyRequest().authenticated()
                 );

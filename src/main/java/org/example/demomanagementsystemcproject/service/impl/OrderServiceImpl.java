@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.criteria.Predicate;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -70,6 +71,56 @@ public class OrderServiceImpl implements OrderService {
         };
 
         return orderRepository.findAll(spec, pageable).map(this::convertToDTO);
+    }
+
+    @Override
+    @Transactional
+    public OrderDTO createOrder(OrderDTO request) {
+        if (request.getItems() == null || request.getItems().isEmpty()) {
+            throw new RuntimeException("订单项不能为空");
+        }
+
+        OrderEntity entity = new OrderEntity();
+        entity.setOrderNo(generateOrderNo());
+        entity.setCustomerName(request.getCustomerName());
+        entity.setCustomerPhone(request.getCustomerPhone());
+        entity.setCustomerAddress(request.getCustomerAddress());
+        entity.setRemark(request.getRemark());
+        entity.setUserOpenid(request.getUserOpenid());
+        entity.setStatus("NEW");
+        entity.setPayStatus("UNPAID");
+
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        List<OrderItemEntity> items = new ArrayList<>();
+        for (OrderItemDTO itemRequest : request.getItems()) {
+            OrderItemEntity item = new OrderItemEntity();
+            item.setProductId(itemRequest.getProductId());
+            item.setProductName(itemRequest.getProductName());
+            item.setPrice(itemRequest.getPrice());
+            item.setQuantity(itemRequest.getQuantity());
+
+            BigDecimal subtotal = itemRequest.getSubtotal();
+            if (subtotal == null && itemRequest.getPrice() != null && itemRequest.getQuantity() != null) {
+                subtotal = itemRequest.getPrice().multiply(BigDecimal.valueOf(itemRequest.getQuantity()));
+            }
+            if (subtotal == null) {
+                subtotal = BigDecimal.ZERO;
+            }
+
+            item.setSubtotal(subtotal);
+            totalAmount = totalAmount.add(subtotal);
+            items.add(item);
+        }
+
+        entity.setTotalAmount(totalAmount);
+        OrderEntity saved = orderRepository.save(entity);
+
+        for (OrderItemEntity item : items) {
+            item.setOrderId(saved.getId());
+        }
+        orderItemRepository.saveAll(items);
+
+        return convertToDTO(saved);
     }
 
     @Override
@@ -239,5 +290,9 @@ public class OrderServiceImpl implements OrderService {
         OrderItemDTO dto = new OrderItemDTO();
         BeanUtils.copyProperties(entity, dto);
         return dto;
+    }
+
+    private String generateOrderNo() {
+        return "OD" + System.currentTimeMillis();
     }
 }

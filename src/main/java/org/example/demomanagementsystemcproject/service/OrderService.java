@@ -12,6 +12,9 @@ public interface OrderService {
     // 订单列表（分页+搜索）
     Page<OrderDTO> getOrders(OrderQueryDTO query);
 
+    // 创建订单（小程序）
+    OrderDTO createOrder(OrderDTO request);
+
     // 获取订单详情
     OrderDTO getOrderById(Long id);
 
