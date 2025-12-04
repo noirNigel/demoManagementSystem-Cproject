@@ -20,7 +20,9 @@ import jakarta.persistence.criteria.Predicate;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -106,6 +108,7 @@ public class OrderServiceImpl implements OrderService {
 
         BigDecimal totalAmount = BigDecimal.ZERO;
         List<OrderItemEntity> items = new ArrayList<>();
+        Set<ProductEntity> productsToUpdate = new HashSet<>();
         for (OrderItemDTO itemRequest : request.getItems()) {
             OrderItemEntity item = new OrderItemEntity();
             item.setProductId(itemRequest.getProductId());
@@ -126,6 +129,12 @@ public class OrderServiceImpl implements OrderService {
                 throw new RuntimeException("订单项数量必须大于0");
             }
             item.setQuantity(itemRequest.getQuantity());
+
+            if (product != null && product.getStock() != null) {
+                int remaining = product.getStock() - itemRequest.getQuantity();
+                product.setStock(Math.max(remaining, 0));
+                productsToUpdate.add(product);
+            }
 
             BigDecimal subtotal = itemRequest.getSubtotal();
             if (subtotal == null && price != null && itemRequest.getQuantity() != null) {
@@ -151,6 +160,10 @@ public class OrderServiceImpl implements OrderService {
             item.setOrderId(saved.getId());
         }
         orderItemRepository.saveAll(items);
+
+        if (!productsToUpdate.isEmpty()) {
+            productRepository.saveAll(productsToUpdate);
+        }
 
         return convertToDTO(saved);
     }

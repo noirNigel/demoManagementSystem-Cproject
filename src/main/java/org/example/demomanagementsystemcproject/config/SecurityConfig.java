@@ -34,7 +34,8 @@ public class SecurityConfig {
                                 "/api/promotions/**",
                                 "/api/marketing/promotions/**",
                                 "/api/orders/no/**",
-                                "/api/orders/*"
+                                "/api/orders/*",
+                                "/api/orders"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/orders").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
