@@ -237,54 +237,74 @@ public class ProductServiceImpl implements ProductService {
                 return imageData;
             }
 
-            int width = original.getWidth();
-            int height = original.getHeight();
-            int maxEdge = Math.max(width, height);
-            int targetMaxEdge = 1280;
+            BufferedImage processed = resizeIfNeeded(original, 1024);
 
-            double scale = maxEdge > targetMaxEdge ? (double) targetMaxEdge / maxEdge : 1.0d;
-            int targetWidth = (int) Math.round(width * scale);
-            int targetHeight = (int) Math.round(height * scale);
+            String encoded = encodeImage(processed, format, 0.8f, prefix);
 
-            BufferedImage processed = original;
-            if (scale < 1.0d) {
-                processed = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
-                Graphics2D g2d = processed.createGraphics();
-                g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-                g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2d.drawImage(original, 0, 0, targetWidth, targetHeight, null);
-                g2d.dispose();
+            // If still large for TEXT/LONGTEXT safe defaults, perform a second-pass aggressive shrink.
+            final int maxLength = 60000; // characters
+            if (encoded.length() > maxLength) {
+                BufferedImage tighter = resizeIfNeeded(processed, 720);
+                encoded = encodeImage(tighter, "jpeg", 0.7f, "data:image/jpeg;base64,");
             }
 
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-            if ("png".equalsIgnoreCase(format)) {
-                ImageIO.write(processed, "png", baos);
-            } else {
-                ImageWriter writer = ImageIO.getImageWritersByFormatName("jpg").next();
-                ImageWriteParam param = writer.getDefaultWriteParam();
-                if (param.canWriteCompressed()) {
-                    param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-                    param.setCompressionQuality(0.82f);
-                }
-                try (ImageOutputStream ios = ImageIO.createImageOutputStream(baos)) {
-                    writer.setOutput(ios);
-                    writer.write(null, new IIOImage(processed, null, null), param);
-                } finally {
-                    writer.dispose();
-                }
-                format = "jpeg";
-            }
-
-            String compressedBase64 = Base64.getEncoder().encodeToString(baos.toByteArray());
-            if (prefix != null) {
-                return prefix + compressedBase64;
-            }
-            return "data:image/" + format + ";base64," + compressedBase64;
+            return encoded;
         } catch (Exception e) {
             // If anything goes wrong during compression, fall back to the original string.
             return imageData;
         }
+    }
+
+    private BufferedImage resizeIfNeeded(BufferedImage original, int targetMaxEdge) {
+        int width = original.getWidth();
+        int height = original.getHeight();
+        int maxEdge = Math.max(width, height);
+
+        double scale = maxEdge > targetMaxEdge ? (double) targetMaxEdge / maxEdge : 1.0d;
+        int targetWidth = (int) Math.round(width * scale);
+        int targetHeight = (int) Math.round(height * scale);
+
+        if (scale >= 0.999d) {
+            return original;
+        }
+
+        BufferedImage processed = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g2d = processed.createGraphics();
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.drawImage(original, 0, 0, targetWidth, targetHeight, null);
+        g2d.dispose();
+        return processed;
+    }
+
+    private String encodeImage(BufferedImage image, String sourceFormat, float quality, String prefix) throws Exception {
+        String format = sourceFormat;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        if (!"png".equalsIgnoreCase(format)) {
+            ImageWriter writer = ImageIO.getImageWritersByFormatName("jpg").next();
+            ImageWriteParam param = writer.getDefaultWriteParam();
+            if (param.canWriteCompressed()) {
+                param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+                param.setCompressionQuality(Math.max(0.45f, Math.min(1.0f, quality)));
+            }
+            try (ImageOutputStream ios = ImageIO.createImageOutputStream(baos)) {
+                writer.setOutput(ios);
+                writer.write(null, new IIOImage(image, null, null), param);
+            } finally {
+                writer.dispose();
+            }
+            format = "jpeg";
+        } else {
+            ImageIO.write(image, "png", baos);
+        }
+
+        String compressedBase64 = Base64.getEncoder().encodeToString(baos.toByteArray());
+        String dataPrefix = prefix;
+        if (dataPrefix == null || !dataPrefix.startsWith("data:image")) {
+            dataPrefix = "data:image/" + format + ";base64,";
+        }
+        return dataPrefix + compressedBase64;
     }
 }
