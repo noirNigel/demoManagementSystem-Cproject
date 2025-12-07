@@ -66,7 +66,7 @@
               >
                 <el-button type="primary">上传图片</el-button>
                 <template #tip>
-                  <div class="el-upload__tip">支持 jpg、png 格式图片</div>
+                  <div class="el-upload__tip">支持 jpg、png 等图片格式，上传后将自动压缩为合理尺寸</div>
                 </template>
               </el-upload>
               <div v-if="formData.image" class="image-preview">
@@ -268,25 +268,21 @@ const loadProductDetail = async () => {
   }
 }
 
-// 本地数据库 image 字段通常为 VARCHAR(512)，避免 Base64 过长导致插入失败
-const MAX_IMAGE_LENGTH = 500
-
-// 将图片压缩到较小尺寸/质量，再转成 Base64，长度超限时给出提示
+// 将上传的图片自动压缩到合理尺寸后再转成 Base64，避免上传大小限制
 const handleImageChange = (file) => {
   const reader = new FileReader()
   reader.onload = (e) => {
     const img = new Image()
     img.onload = () => {
       const canvas = document.createElement('canvas')
-      const maxSize = 300 // 限制尺寸，减小 Base64 长度
+      const maxDimension = 1280 // 限制最长边，但不限制原始文件大小
       let { width, height } = img
 
-      if (width > height && width > maxSize) {
-        height = (height * maxSize) / width
-        width = maxSize
-      } else if (height > maxSize) {
-        width = (width * maxSize) / height
-        height = maxSize
+      const longestSide = Math.max(width, height)
+      if (longestSide > maxDimension) {
+        const scale = maxDimension / longestSide
+        width *= scale
+        height *= scale
       }
 
       canvas.width = width
@@ -294,12 +290,9 @@ const handleImageChange = (file) => {
       const ctx = canvas.getContext('2d')
       ctx.drawImage(img, 0, 0, width, height)
 
-      const compressed = canvas.toDataURL('image/jpeg', 0.7)
-      if (compressed.length > MAX_IMAGE_LENGTH) {
-        ElMessage.warning('图片过大，请改用更小的图片或使用图片链接')
-        return
-      }
-      formData.image = compressed
+      // 以较高质量输出，确保清晰度；不再对 Base64 长度进行限制
+      formData.image = canvas.toDataURL('image/jpeg', 0.85)
+      ElMessage.success('图片已自动压缩并保存')
     }
     img.src = e.target.result
   }
