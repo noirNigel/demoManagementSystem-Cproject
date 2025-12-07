@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/marketing/promotions")
+@RequestMapping({"/api/marketing/promotions", "/api/promotions"})
 public class PromotionController {
 
     private static final Logger logger = LoggerFactory.getLogger(PromotionController.class);
