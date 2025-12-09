@@ -3,21 +3,27 @@ package org.example.demomanagementsystemcproject.service.impl;
 import org.example.demomanagementsystemcproject.dto.*;
 import org.example.demomanagementsystemcproject.entity.OrderEntity;
 import org.example.demomanagementsystemcproject.entity.OrderItemEntity;
+import org.example.demomanagementsystemcproject.entity.ProductEntity;
 import org.example.demomanagementsystemcproject.repo.OrderRepository;
 import org.example.demomanagementsystemcproject.repo.OrderItemRepository;
+import org.example.demomanagementsystemcproject.repo.ProductRepository;
 import org.example.demomanagementsystemcproject.service.OrderService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.criteria.Predicate;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,15 +31,22 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
+    private final ProductRepository productRepository;
 
-    public OrderServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository) {
+    public OrderServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository,
+                            ProductRepository productRepository) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
+        this.productRepository = productRepository;
     }
 
     @Override
     public Page<OrderDTO> getOrders(OrderQueryDTO query) {
-        Pageable pageable = PageRequest.of(query.getPage() - 1, query.getSize());
+        Pageable pageable = PageRequest.of(
+                query.getPage() - 1,
+                query.getSize(),
+                Sort.by(Sort.Direction.DESC, "createdAt", "id")
+        );
 
         Specification<OrderEntity> spec = (root, criteriaQuery, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -70,6 +83,94 @@ public class OrderServiceImpl implements OrderService {
         };
 
         return orderRepository.findAll(spec, pageable).map(this::convertToDTO);
+    }
+
+    @Override
+    @Transactional
+    public OrderDTO createOrder(OrderDTO request) {
+        if (request.getItems() == null || request.getItems().isEmpty()) {
+            throw new RuntimeException("订单项不能为空");
+        }
+
+        // 预加载商品信息，便于价格和名称兜底
+        List<Long> productIds = request.getItems().stream()
+                .map(OrderItemDTO::getProductId)
+                .filter(id -> id != null)
+                .distinct()
+                .toList();
+        var productMap = productRepository.findAllById(productIds).stream()
+                .collect(Collectors.toMap(ProductEntity::getId, p -> p));
+
+        OrderEntity entity = new OrderEntity();
+        entity.setOrderNo(generateOrderNo());
+        entity.setCustomerName(request.getCustomerName());
+        entity.setCustomerPhone(request.getCustomerPhone());
+        entity.setCustomerAddress(request.getCustomerAddress());
+        entity.setRemark(request.getRemark());
+        entity.setUserOpenid(request.getUserOpenid());
+        entity.setStatus("NEW");
+        entity.setPayStatus("UNPAID");
+
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        List<OrderItemEntity> items = new ArrayList<>();
+        Set<ProductEntity> productsToUpdate = new HashSet<>();
+        for (OrderItemDTO itemRequest : request.getItems()) {
+            OrderItemEntity item = new OrderItemEntity();
+            item.setProductId(itemRequest.getProductId());
+
+            ProductEntity product = itemRequest.getProductId() == null ? null : productMap.get(itemRequest.getProductId());
+            String productName = itemRequest.getProductName();
+            if (productName == null && product != null) {
+                productName = product.getName();
+            }
+            item.setProductName(productName);
+
+            BigDecimal price = itemRequest.getPrice();
+            if (price == null && product != null) {
+                price = product.getPrice();
+            }
+            item.setPrice(price);
+            if (itemRequest.getQuantity() == null || itemRequest.getQuantity() <= 0) {
+                throw new RuntimeException("订单项数量必须大于0");
+            }
+            item.setQuantity(itemRequest.getQuantity());
+
+            if (product != null && product.getStock() != null) {
+                int remaining = product.getStock() - itemRequest.getQuantity();
+                product.setStock(Math.max(remaining, 0));
+                productsToUpdate.add(product);
+            }
+
+            BigDecimal subtotal = itemRequest.getSubtotal();
+            if (subtotal == null && price != null && itemRequest.getQuantity() != null) {
+                subtotal = price.multiply(BigDecimal.valueOf(itemRequest.getQuantity()));
+            }
+            if (subtotal == null) {
+                subtotal = BigDecimal.ZERO;
+            }
+
+            item.setSubtotal(subtotal);
+            totalAmount = totalAmount.add(subtotal);
+            items.add(item);
+        }
+
+        if (totalAmount.compareTo(BigDecimal.ZERO) == 0 && request.getTotalAmount() != null) {
+            totalAmount = request.getTotalAmount();
+        }
+
+        entity.setTotalAmount(totalAmount);
+        OrderEntity saved = orderRepository.save(entity);
+
+        for (OrderItemEntity item : items) {
+            item.setOrderId(saved.getId());
+        }
+        orderItemRepository.saveAll(items);
+
+        if (!productsToUpdate.isEmpty()) {
+            productRepository.saveAll(productsToUpdate);
+        }
+
+        return convertToDTO(saved);
     }
 
     @Override
@@ -239,5 +340,9 @@ public class OrderServiceImpl implements OrderService {
         OrderItemDTO dto = new OrderItemDTO();
         BeanUtils.copyProperties(entity, dto);
         return dto;
+    }
+
+    private String generateOrderNo() {
+        return "OD" + System.currentTimeMillis();
     }
 }

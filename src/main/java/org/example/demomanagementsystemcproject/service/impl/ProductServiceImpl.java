@@ -14,7 +14,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.criteria.Predicate;
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -176,13 +186,7 @@ public class ProductServiceImpl implements ProductService {
         entity.setCategoryId(dto.getCategoryId());
         entity.setCategoryPath(dto.getCategoryPath());
         entity.setRecipe(dto.getRecipe());
-        // 数据库 image 字段为可变长字符（本地库通常是 VARCHAR/512 左右），
-        // 在入库前做长度限制，避免出现 Data too long 错误。
-        if (dto.getImage() != null && dto.getImage().length() > 500) {
-            throw new RuntimeException("图片内容过长，请使用图片链接或压缩后再上传");
-        }
-
-        entity.setImage(dto.getImage());
+        entity.setImage(compressImageIfNeeded(dto.getImage()));
         entity.setDescription(dto.getDescription());
     }
 
@@ -190,5 +194,117 @@ public class ProductServiceImpl implements ProductService {
         ProductDTO dto = new ProductDTO();
         BeanUtils.copyProperties(entity, dto);
         return dto;
+    }
+
+    /**
+     * Compress base64-encoded images to a reasonable size while keeping non-image strings untouched.
+     * This avoids rejecting large uploads while preventing oversized payloads from being persisted as-is.
+     */
+    private String compressImageIfNeeded(String imageData) {
+        if (imageData == null || imageData.isBlank()) {
+            return imageData;
+        }
+
+        String prefix = null;
+        String format = "jpeg";
+        String payload = imageData;
+
+        // data URI handling (e.g., data:image/png;base64,xxxx)
+        if (imageData.startsWith("data:image")) {
+            int commaIndex = imageData.indexOf(',');
+            int slashIndex = imageData.indexOf('/');
+            int semicolonIndex = imageData.indexOf(';');
+            if (commaIndex > 0) {
+                prefix = imageData.substring(0, commaIndex + 1);
+                payload = imageData.substring(commaIndex + 1);
+            }
+            if (slashIndex > 0 && semicolonIndex > slashIndex) {
+                format = imageData.substring(slashIndex + 1, semicolonIndex);
+            }
+        }
+
+        byte[] decoded;
+        try {
+            decoded = Base64.getDecoder().decode(payload);
+        } catch (IllegalArgumentException e) {
+            // Not base64 – return original string untouched.
+            return imageData;
+        }
+
+        try {
+            BufferedImage original = ImageIO.read(new ByteArrayInputStream(decoded));
+            if (original == null) {
+                return imageData;
+            }
+
+            BufferedImage processed = resizeIfNeeded(original, 1024);
+
+            String encoded = encodeImage(processed, format, 0.8f, prefix);
+
+            // If still large for TEXT/LONGTEXT safe defaults, perform a second-pass aggressive shrink.
+            final int maxLength = 60000; // characters
+            if (encoded.length() > maxLength) {
+                BufferedImage tighter = resizeIfNeeded(processed, 720);
+                encoded = encodeImage(tighter, "jpeg", 0.7f, "data:image/jpeg;base64,");
+            }
+
+            return encoded;
+        } catch (Exception e) {
+            // If anything goes wrong during compression, fall back to the original string.
+            return imageData;
+        }
+    }
+
+    private BufferedImage resizeIfNeeded(BufferedImage original, int targetMaxEdge) {
+        int width = original.getWidth();
+        int height = original.getHeight();
+        int maxEdge = Math.max(width, height);
+
+        double scale = maxEdge > targetMaxEdge ? (double) targetMaxEdge / maxEdge : 1.0d;
+        int targetWidth = (int) Math.round(width * scale);
+        int targetHeight = (int) Math.round(height * scale);
+
+        if (scale >= 0.999d) {
+            return original;
+        }
+
+        BufferedImage processed = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g2d = processed.createGraphics();
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.drawImage(original, 0, 0, targetWidth, targetHeight, null);
+        g2d.dispose();
+        return processed;
+    }
+
+    private String encodeImage(BufferedImage image, String sourceFormat, float quality, String prefix) throws Exception {
+        String format = sourceFormat;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        if (!"png".equalsIgnoreCase(format)) {
+            ImageWriter writer = ImageIO.getImageWritersByFormatName("jpg").next();
+            ImageWriteParam param = writer.getDefaultWriteParam();
+            if (param.canWriteCompressed()) {
+                param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+                param.setCompressionQuality(Math.max(0.45f, Math.min(1.0f, quality)));
+            }
+            try (ImageOutputStream ios = ImageIO.createImageOutputStream(baos)) {
+                writer.setOutput(ios);
+                writer.write(null, new IIOImage(image, null, null), param);
+            } finally {
+                writer.dispose();
+            }
+            format = "jpeg";
+        } else {
+            ImageIO.write(image, "png", baos);
+        }
+
+        String compressedBase64 = Base64.getEncoder().encodeToString(baos.toByteArray());
+        String dataPrefix = prefix;
+        if (dataPrefix == null || !dataPrefix.startsWith("data:image")) {
+            dataPrefix = "data:image/" + format + ";base64,";
+        }
+        return dataPrefix + compressedBase64;
     }
 }
