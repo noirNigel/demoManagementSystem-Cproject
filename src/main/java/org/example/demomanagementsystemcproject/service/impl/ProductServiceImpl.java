@@ -191,6 +191,7 @@ public class ProductServiceImpl implements ProductService {
         entity.setRecipe(dto.getRecipe());
         entity.setImage(compressImageIfNeeded(dto.getImage()));
         entity.setDescription(dto.getDescription());
+        entity.setImages(dto.getImages());
         enforceAutoOffShelf(entity);
     }
 

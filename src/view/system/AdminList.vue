@@ -37,6 +37,14 @@
             >
               禁用
             </el-button>
+            <el-button
+                type="danger"
+                size="small"
+                plain
+                @click="handleDelete(scope.row)"
+            >
+              删除
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -84,7 +92,8 @@ import {
   getAdminList,
   createAdmin,
   updateAdmin,
-  disableAdmin
+  disableAdmin,
+  deleteAdmin
 } from '../../api/system'
 
 const adminList = ref([])
@@ -172,6 +181,20 @@ function handleDisable(row) {
       .then(() => disableAdmin(row.id))
       .then(() => {
         ElMessage.success('已禁用')
+        fetchData()
+      })
+      .catch(() => {})
+}
+
+function handleDelete(row) {
+  ElMessageBox.confirm(
+      `确定彻底删除员工「${row.username}」吗？`,
+      '提示',
+      { type: 'warning' }
+  )
+      .then(() => deleteAdmin(row.id))
+      .then(() => {
+        ElMessage.success('已删除')
         fetchData()
       })
       .catch(() => {})

@@ -77,4 +77,13 @@ public class SystemEmployeeController {
         admin.setStatus(0);
         adminRepository.save(admin);
     }
+
+    // 物理删除员工
+    @DeleteMapping("/{id}/remove")
+    @OperationLog(module = "员工管理", action = "删除员工")
+    public void delete(@PathVariable Long id) {
+        Admin admin = adminRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("员工不存在"));
+        adminRepository.delete(admin);
+    }
 }

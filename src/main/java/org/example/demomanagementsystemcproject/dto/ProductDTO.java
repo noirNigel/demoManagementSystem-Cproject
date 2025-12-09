@@ -17,6 +17,9 @@ public class ProductDTO {
     private String categoryPath;
     private String recipe;
 
+    /** 商品轮播图（JSON 数组字符串） */
+    private String images;
+
     @JsonAlias({"imageUrl", "image_url"})
     private String image;
 
@@ -59,6 +62,9 @@ public class ProductDTO {
 
     public String getRecipe() { return recipe; }
     public void setRecipe(String recipe) { this.recipe = recipe; }
+
+    public String getImages() { return images; }
+    public void setImages(String images) { this.images = images; }
 
     public String getImage() { return image; }
     public void setImage(String image) { this.image = image; }

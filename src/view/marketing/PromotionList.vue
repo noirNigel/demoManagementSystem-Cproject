@@ -137,7 +137,7 @@
               v-model="formData.startTime"
               type="datetime"
               placeholder="选择开始时间"
-              value-format="timestamp"
+              value-format="YYYY-MM-DD HH:mm:ss"
               format="YYYY-MM-DD HH:mm:ss"
               style="width: 100%"
           />
@@ -148,7 +148,7 @@
               v-model="formData.endTime"
               type="datetime"
               placeholder="选择结束时间"
-              value-format="timestamp"
+              value-format="YYYY-MM-DD HH:mm:ss"
               format="YYYY-MM-DD HH:mm:ss"
               style="width: 100%"
           />
@@ -304,7 +304,11 @@ const handleAdd = () => {
 const handleEdit = (row) => {
   dialogType.value = 'edit'
   dialogVisible.value = true
-  Object.assign(formData, row)
+  Object.assign(formData, {
+    ...row,
+    startTime: normalizeDisplayTime(row.startTime),
+    endTime: normalizeDisplayTime(row.endTime)
+  })
 }
 
 // 更新促销活动状态
@@ -342,11 +346,13 @@ const handleSubmit = async () => {
   try {
     await formRef.value.validate()
 
+    const payload = buildSubmitPayload()
+
     if (dialogType.value === 'create') {
-      await promotionApi.createPromotion(formData)
+      await promotionApi.createPromotion(payload)
       ElMessage.success('添加成功')
     } else {
-      await promotionApi.updatePromotion(formData.id, formData)
+      await promotionApi.updatePromotion(formData.id, payload)
       ElMessage.success('更新成功')
     }
     dialogVisible.value = false
@@ -370,6 +376,28 @@ const resetForm = () => {
     status: 1,
     description: ''
   })
+}
+
+// 构建提交载荷，确保时间格式符合后端 LocalDateTime 自动解析
+const buildSubmitPayload = () => {
+  const formatToIso = (value) => {
+    if (!value) return null
+    // value 已是 'YYYY-MM-DD HH:mm:ss' 字符串，转为标准 ISO 字符串
+    const normalized = value.replace(' ', 'T')
+    return normalized
+  }
+
+  return {
+    ...formData,
+    startTime: formatToIso(formData.startTime),
+    endTime: formatToIso(formData.endTime)
+  }
+}
+
+const normalizeDisplayTime = (value) => {
+  if (!value) return null
+  // 兼容 ISO 时间和已有格式
+  return value.replace('T', ' ').replace(/\.\d+Z?$/, '')
 }
 
 // 生命周期

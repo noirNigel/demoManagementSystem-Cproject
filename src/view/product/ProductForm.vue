@@ -83,6 +83,27 @@
               </div>
             </el-form-item>
 
+            <el-form-item label="轮播图设置">
+              <div class="carousel-list">
+                <div
+                    v-for="(url, index) in carouselImages"
+                    :key="index"
+                    class="carousel-row"
+                >
+                  <el-input
+                      v-model="carouselImages[index]"
+                      placeholder="请输入轮播图地址"
+                  />
+                  <el-button
+                      link
+                      type="danger"
+                      @click="removeCarouselImage(index)"
+                  >删除</el-button>
+                </div>
+                <el-button type="primary" link @click="addCarouselImage">添加轮播图</el-button>
+              </div>
+            </el-form-item>
+
             <el-form-item label="商品描述" prop="description">
               <el-input
                   v-model="formData.description"
@@ -195,6 +216,8 @@ const formData = reactive({
   recipe: ''
 })
 
+const carouselImages = ref([])
+
 // 表单验证规则
 const rules = {
   name: [
@@ -262,6 +285,11 @@ const loadProductDetail = async () => {
     formData.image = response.image || response.imageUrl || ''
     formData.description = response.description || response.desc || ''
     formData.recipe = response.recipe || ''
+    try {
+      carouselImages.value = response.images ? JSON.parse(response.images) : []
+    } catch (e) {
+      carouselImages.value = []
+    }
   } catch (error) {
     console.error('加载商品详情失败:', error)
     ElMessage.error('加载商品详情失败')
@@ -307,6 +335,7 @@ const handleSave = async () => {
     loading.value = true
 
     const submitData = { ...formData }
+    submitData.images = JSON.stringify(carouselImages.value.filter(item => item))
 
     // 同步可能存在的后端字段命名差异
     submitData.imageUrl = submitData.image
@@ -339,6 +368,15 @@ const handleSave = async () => {
 // 取消
 const handleCancel = () => {
   router.push('/admin/products')
+}
+
+// 轮播图管理
+const addCarouselImage = () => {
+  carouselImages.value.push('')
+}
+
+const removeCarouselImage = (index) => {
+  carouselImages.value.splice(index, 1)
 }
 
 // 生命周期
@@ -390,5 +428,21 @@ onMounted(() => {
   margin: 8px 0 0;
   font-size: 12px;
   color: #666;
+}
+
+.carousel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.carousel-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.carousel-row .el-input {
+  flex: 1;
 }
 </style>

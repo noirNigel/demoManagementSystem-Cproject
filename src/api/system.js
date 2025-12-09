@@ -34,6 +34,13 @@ export function disableAdmin(id) {
     })
 }
 
+export function deleteAdmin(id) {
+    return request({
+        url: `/api/system/admins/${id}/remove`,
+        method: 'delete'
+    })
+}
+
 // ===== 门店管理 =====
 export function getStoreList() {
     return request({
