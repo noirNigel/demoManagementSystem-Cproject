@@ -3,7 +3,7 @@ import api from '@/utils/request'
 // 优惠券相关API
 export const couponApi = {
     // 获取优惠券列表
-    getCoupons: (params) => api.get('/api/marketing/coupons', { params }),
+    getCoupons: (params) => api.get('/api/marketing/coupons/page', { params }),
     // 获取优惠券详情
     getCoupon: (id) => api.get(`/api/marketing/coupons/${id}`),
     // 创建优惠券

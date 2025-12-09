@@ -1,7 +1,6 @@
 package org.example.demomanagementsystemcproject.service.impl;
 
-import org.example.demomanagementsystemcproject.dto.ProductDTO;
-import org.example.demomanagementsystemcproject.dto.ProductQueryDTO;
+import org.example.demomanagementsystemcproject.dto.*;
 import org.example.demomanagementsystemcproject.entity.ProductEntity;
 import org.example.demomanagementsystemcproject.repo.ProductRepository;
 import org.example.demomanagementsystemcproject.service.ProductService;
@@ -31,6 +30,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class ProductServiceImpl implements ProductService {
+
+    private static final int AUTO_OFF_SHELF_THRESHOLD = 5;
 
     private final ProductRepository productRepository;
 
@@ -131,6 +132,7 @@ public class ProductServiceImpl implements ProductService {
         ProductEntity entity = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("商品不存在"));
         entity.setStatus(status);
+        enforceAutoOffShelf(entity);
         productRepository.save(entity);
     }
 
@@ -148,6 +150,7 @@ public class ProductServiceImpl implements ProductService {
         ProductEntity entity = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("商品不存在"));
         entity.setStock(stock);
+        enforceAutoOffShelf(entity);
         productRepository.save(entity);
     }
 
@@ -188,12 +191,20 @@ public class ProductServiceImpl implements ProductService {
         entity.setRecipe(dto.getRecipe());
         entity.setImage(compressImageIfNeeded(dto.getImage()));
         entity.setDescription(dto.getDescription());
+        enforceAutoOffShelf(entity);
     }
 
     private ProductDTO convertToDTO(ProductEntity entity) {
         ProductDTO dto = new ProductDTO();
         BeanUtils.copyProperties(entity, dto);
         return dto;
+    }
+
+    private void enforceAutoOffShelf(ProductEntity entity) {
+        Integer stock = entity.getStock();
+        if (stock != null && stock < AUTO_OFF_SHELF_THRESHOLD) {
+            entity.setStatus(0);
+        }
     }
 
     /**
