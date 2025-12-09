@@ -112,8 +112,9 @@ const loadCoupons = async () => {
   loading.value = true
   try {
     const response = await couponApi.getCoupons(queryParams)
-    tableData.value = response.content || []
-    total.value = response.totalElements || 0
+    const data = response?.data ?? response
+    tableData.value = data?.content || []
+    total.value = data?.totalElements || 0
   } catch (error) {
     console.error('加载优惠券列表失败:', error)
     ElMessage.error('加载优惠券列表失败')
