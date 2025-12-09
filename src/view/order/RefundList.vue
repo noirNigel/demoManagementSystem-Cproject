@@ -102,7 +102,7 @@ const total = ref(0)
 const queryParams = reactive({
   orderNo: '',
   customerName: '',
-  status: 'REFUNDING', // 默认显示退款中的订单
+  status: '', // 默认展示全部退款相关订单
   page: 1,
   size: 10
 })
@@ -112,10 +112,10 @@ const loadRefundOrders = async () => {
   loading.value = true
   try {
     const response = await api.get('/api/orders', { params: queryParams })
-    // 过滤出退款相关的订单
-    tableData.value = (response.content || []).filter(order =>
-        order.status === 'REFUNDING' || order.status === 'REFUNDED'
-    )
+    // 过滤出退款相关的订单，并按时间倒序
+    tableData.value = (response.content || [])
+        .filter(order => order.status === 'REFUNDING' || order.status === 'REFUNDED')
+        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
     total.value = tableData.value.length
   } catch (error) {
     console.error('加载退款订单失败:', error)
@@ -136,7 +136,7 @@ const handleReset = () => {
   Object.assign(queryParams, {
     orderNo: '',
     customerName: '',
-    status: 'REFUNDING',
+    status: '',
     page: 1
   })
   loadRefundOrders()

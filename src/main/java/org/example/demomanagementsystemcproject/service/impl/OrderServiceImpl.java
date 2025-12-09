@@ -12,6 +12,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,7 +42,11 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Page<OrderDTO> getOrders(OrderQueryDTO query) {
-        Pageable pageable = PageRequest.of(query.getPage() - 1, query.getSize());
+        Pageable pageable = PageRequest.of(
+                query.getPage() - 1,
+                query.getSize(),
+                Sort.by(Sort.Direction.DESC, "createdAt", "id")
+        );
 
         Specification<OrderEntity> spec = (root, criteriaQuery, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
