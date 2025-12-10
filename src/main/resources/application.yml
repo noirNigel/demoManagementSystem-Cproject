@@ -19,11 +19,11 @@ spring:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: Asia/Shanghai
 
-flyway:
-  enabled: true
-  locations: classpath:db/migration
-  baseline-on-migrate: true
-  sql-migration-prefix: v
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    sql-migration-prefix: V
 
 jwt:
   secret: verySecretKeyChangeThisInProd
