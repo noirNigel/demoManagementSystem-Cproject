@@ -29,23 +29,21 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(
-                                "/api/orders/**"
-                        ).permitAll()
-                        .requestMatchers(HttpMethod.GET,
-                                "/api/categories/**",
-                                "/api/products/**",
+                                "/api/auth/**",
+                                "/api/orders",
+                                "/api/orders/**",
+                                "/api/coupons/**",
                                 "/api/marketing/coupons/**",
                                 "/api/promotions/**",
                                 "/api/marketing/promotions/**",
-                                "/api/coupons/**"
+                                "/api/categories/**",
+                                "/api/products/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST,
-                                "/api/orders",
                                 "/api/orders/refund",
                                 "/api/marketing/coupons/claim",
                                 "/api/coupons/claim"
                         ).permitAll()
-                        .requestMatchers("/api/auth/**").permitAll()
                         .anyRequest().authenticated()
                 );
 
