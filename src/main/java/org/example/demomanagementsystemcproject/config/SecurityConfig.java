@@ -28,15 +28,15 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(
+                                "/api/orders/**"
+                        ).permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/categories/**",
                                 "/api/products/**",
                                 "/api/marketing/coupons/**",
                                 "/api/promotions/**",
                                 "/api/marketing/promotions/**",
-                                "/api/orders/no/**",
-                                "/api/orders/*",
-                                "/api/orders",
                                 "/api/coupons/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST,
