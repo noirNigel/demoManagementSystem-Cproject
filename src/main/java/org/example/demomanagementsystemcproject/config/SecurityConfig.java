@@ -28,22 +28,18 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(
-                                "/api/auth/**",
-                                "/api/orders",
-                                "/api/orders/**",
-                                "/api/coupons/**",
-                                "/api/marketing/coupons/**",
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/categories/**",
+                                "/api/products/**",
                                 "/api/promotions/**",
                                 "/api/marketing/promotions/**",
-                                "/api/categories/**",
-                                "/api/products/**"
+                                "/api/orders/no/**",
+                                "/api/orders/*",
+                                "/api/orders"
                         ).permitAll()
-                        .requestMatchers(HttpMethod.POST,
-                                "/api/orders/refund",
-                                "/api/marketing/coupons/claim",
-                                "/api/coupons/claim"
-                        ).permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/orders").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/orders/refund").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
                         .anyRequest().authenticated()
                 );
 
