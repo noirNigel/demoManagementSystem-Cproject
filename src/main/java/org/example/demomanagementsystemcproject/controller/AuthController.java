@@ -38,6 +38,7 @@ public class AuthController {
             put("token", token);
             put("username", admin.getUsername());
             put("role", admin.getRole());
+            put("userId", admin.getId());
         }};
     }
 
@@ -53,6 +54,7 @@ public class AuthController {
                 put("token", token);
                 put("username", admin.getUsername());
                 put("role", admin.getRole());
+                put("userId", admin.getId());
             }};
         } catch (RuntimeException e) {
             return new HashMap<>() {{

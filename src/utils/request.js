@@ -13,6 +13,19 @@ instance.interceptors.request.use(config => {
         config.headers["Authorization"] = `Bearer ${token}`;
     }
 
+    // 透传用户 ID，供需要 userId 的接口使用（例如优惠券公共接口）
+    const userInfoRaw = localStorage.getItem('userInfo');
+    if (userInfoRaw) {
+        try {
+            const userInfo = JSON.parse(userInfoRaw);
+            if (userInfo?.userId) {
+                config.headers['X-User-Id'] = userInfo.userId;
+            }
+        } catch (e) {
+            console.warn('解析用户信息失败，跳过 X-User-Id 注入', e);
+        }
+    }
+
     // 处理 POST、PUT 请求中的数据
     if (config.data && (config.method === 'post' || config.method === 'put')) {
         console.log('请求拦截器 - 处理前数据:', config.data)

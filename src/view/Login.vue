@@ -271,6 +271,11 @@ const login = async () => {
 
     if (res.code === 200) {
       localStorage.setItem('token', res.token)
+      localStorage.setItem('userInfo', JSON.stringify({
+        userId: res.userId,
+        username: res.username,
+        role: res.role
+      }))
       ElMessage.success('登录成功')
       router.push('/admin/dashboard')
     } else {
@@ -305,6 +310,11 @@ const register = async () => {
 
     if (res.code === 200) {
       localStorage.setItem('token', res.token)
+      localStorage.setItem('userInfo', JSON.stringify({
+        userId: res.userId,
+        username: res.username,
+        role: res.role
+      }))
       ElMessage.success('注册成功')
       router.push('/admin/dashboard')
     } else {
