@@ -111,7 +111,13 @@ public class OrderServiceImpl implements OrderService {
         entity.setStatus("NEW");
         entity.setPayStatus("UNPAID");
 
-        BigDecimal totalAmount = BigDecimal.ZERO;
+        BigDecimal goodsAmount = request.getGoodsAmount();
+        BigDecimal discountAmount = request.getDiscountAmount();
+        if (discountAmount == null) {
+            discountAmount = request.getCouponDiscountAmount();
+        }
+
+        BigDecimal computedGoods = BigDecimal.ZERO;
         List<OrderItemEntity> items = new ArrayList<>();
         Set<ProductEntity> productsToUpdate = new HashSet<>();
         for (OrderItemDTO itemRequest : request.getItems()) {
@@ -150,15 +156,38 @@ public class OrderServiceImpl implements OrderService {
             }
 
             item.setSubtotal(subtotal);
-            totalAmount = totalAmount.add(subtotal);
+            computedGoods = computedGoods.add(subtotal);
             items.add(item);
         }
 
-        if (totalAmount.compareTo(BigDecimal.ZERO) == 0 && request.getTotalAmount() != null) {
-            totalAmount = request.getTotalAmount();
+        if (goodsAmount == null) {
+            goodsAmount = computedGoods;
+        }
+        if (discountAmount == null && request.getTotalAmount() != null) {
+            BigDecimal candidate = goodsAmount.subtract(request.getTotalAmount());
+            if (candidate.compareTo(BigDecimal.ZERO) < 0) {
+                candidate = BigDecimal.ZERO;
+            }
+            discountAmount = candidate;
+        }
+        if (discountAmount == null) {
+            discountAmount = BigDecimal.ZERO;
         }
 
-        entity.setTotalAmount(totalAmount);
+        BigDecimal payAmount = request.getTotalAmount();
+        if (payAmount == null) {
+            payAmount = goodsAmount.subtract(discountAmount);
+        }
+        if (payAmount.compareTo(BigDecimal.ZERO) < 0) {
+            payAmount = BigDecimal.ZERO;
+        }
+
+        entity.setGoodsAmount(goodsAmount);
+        entity.setDiscountAmount(discountAmount);
+        entity.setCouponId(request.getCouponId());
+        entity.setUserCouponId(request.getUserCouponId());
+        entity.setCouponDiscountAmount(request.getCouponDiscountAmount());
+        entity.setTotalAmount(payAmount);
         OrderEntity saved = orderRepository.save(entity);
 
         for (OrderItemEntity item : items) {

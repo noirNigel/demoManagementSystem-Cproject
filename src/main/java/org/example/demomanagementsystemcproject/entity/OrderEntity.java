@@ -20,6 +20,21 @@ public class OrderEntity {
     @Column(name = "total_amount", precision = 12, scale = 2)
     private BigDecimal totalAmount;
 
+    @Column(name = "goods_amount", precision = 12, scale = 2)
+    private BigDecimal goodsAmount;
+
+    @Column(name = "discount_amount", precision = 12, scale = 2)
+    private BigDecimal discountAmount;
+
+    @Column(name = "coupon_id")
+    private Long couponId;
+
+    @Column(name = "user_coupon_id")
+    private Long userCouponId;
+
+    @Column(name = "coupon_discount_amount", precision = 12, scale = 2)
+    private BigDecimal couponDiscountAmount;
+
     @Column(name = "status")
     private String status; // NEW, PAID, CONFIRMED, COMPLETED, CANCELLED, REFUNDING, REFUNDED
 
@@ -94,6 +109,21 @@ public class OrderEntity {
 
     public BigDecimal getTotalAmount() { return totalAmount; }
     public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
+
+    public BigDecimal getGoodsAmount() { return goodsAmount; }
+    public void setGoodsAmount(BigDecimal goodsAmount) { this.goodsAmount = goodsAmount; }
+
+    public BigDecimal getDiscountAmount() { return discountAmount; }
+    public void setDiscountAmount(BigDecimal discountAmount) { this.discountAmount = discountAmount; }
+
+    public Long getCouponId() { return couponId; }
+    public void setCouponId(Long couponId) { this.couponId = couponId; }
+
+    public Long getUserCouponId() { return userCouponId; }
+    public void setUserCouponId(Long userCouponId) { this.userCouponId = userCouponId; }
+
+    public BigDecimal getCouponDiscountAmount() { return couponDiscountAmount; }
+    public void setCouponDiscountAmount(BigDecimal couponDiscountAmount) { this.couponDiscountAmount = couponDiscountAmount; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }

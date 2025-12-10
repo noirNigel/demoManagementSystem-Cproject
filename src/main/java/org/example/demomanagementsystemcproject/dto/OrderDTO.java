@@ -15,6 +15,13 @@ public class OrderDTO {
     private String customerPhone;
     private String customerAddress;
     private String remark;
+
+    // 价格与优惠信息
+    private BigDecimal goodsAmount;
+    private BigDecimal discountAmount;
+    private Long couponId;
+    private Long userCouponId;
+    private BigDecimal couponDiscountAmount;
     private LocalDateTime paymentTime;
     private LocalDateTime confirmedTime;
     private LocalDateTime completedTime;
@@ -57,6 +64,21 @@ public class OrderDTO {
 
     public String getRemark() { return remark; }
     public void setRemark(String remark) { this.remark = remark; }
+
+    public BigDecimal getGoodsAmount() { return goodsAmount; }
+    public void setGoodsAmount(BigDecimal goodsAmount) { this.goodsAmount = goodsAmount; }
+
+    public BigDecimal getDiscountAmount() { return discountAmount; }
+    public void setDiscountAmount(BigDecimal discountAmount) { this.discountAmount = discountAmount; }
+
+    public Long getCouponId() { return couponId; }
+    public void setCouponId(Long couponId) { this.couponId = couponId; }
+
+    public Long getUserCouponId() { return userCouponId; }
+    public void setUserCouponId(Long userCouponId) { this.userCouponId = userCouponId; }
+
+    public BigDecimal getCouponDiscountAmount() { return couponDiscountAmount; }
+    public void setCouponDiscountAmount(BigDecimal couponDiscountAmount) { this.couponDiscountAmount = couponDiscountAmount; }
 
     public LocalDateTime getPaymentTime() { return paymentTime; }
     public void setPaymentTime(LocalDateTime paymentTime) { this.paymentTime = paymentTime; }
