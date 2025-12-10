@@ -42,6 +42,11 @@ public class ProductEntity {
     @Column(name = "image", columnDefinition = "LONGTEXT")
     private String image;
 
+    /** 商品轮播图（JSON 数组字符串） */
+    @Lob
+    @Column(name = "images", columnDefinition = "LONGTEXT")
+    private String images;
+
     @Lob
     @Column(columnDefinition = "TEXT")
     private String description;
@@ -103,6 +108,9 @@ public class ProductEntity {
 
     public String getImage() { return image; }
     public void setImage(String image) { this.image = image; }
+
+    public String getImages() { return images; }
+    public void setImages(String images) { this.images = images; }
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
