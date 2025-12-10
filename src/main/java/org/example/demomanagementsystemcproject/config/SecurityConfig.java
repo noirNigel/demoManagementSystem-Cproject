@@ -31,14 +31,21 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,
                                 "/api/categories/**",
                                 "/api/products/**",
+                                "/api/marketing/coupons/**",
                                 "/api/promotions/**",
                                 "/api/marketing/promotions/**",
                                 "/api/orders/no/**",
                                 "/api/orders/*",
-                                "/api/orders"
+                                "/api/orders",
+                                "/api/orders/**",
+                                "/api/coupons/**"
                         ).permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/orders").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/orders/refund").permitAll()
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/orders",
+                                "/api/orders/refund",
+                                "/api/marketing/coupons/claim",
+                                "/api/coupons/claim"
+                        ).permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .anyRequest().authenticated()
                 );
