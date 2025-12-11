@@ -29,7 +29,7 @@ public class Admin {
 
     /** 账号状态：1 启用，0 禁用 */
     @Column(name = "status")
-    private Integer status;
+    private Integer status = 1;
 
     /** 所属门店 ID（多门店支持） */
     @Column(name = "store_id")
@@ -47,6 +47,9 @@ public class Admin {
 
     @PrePersist
     public void prePersist() {
+        if (this.status == null) {
+            this.status = 1;
+        }
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }

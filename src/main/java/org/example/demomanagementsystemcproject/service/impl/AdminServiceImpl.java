@@ -47,6 +47,7 @@ public class AdminServiceImpl implements AdminService {
         admin.setPassword(passwordEncoder.encode(password));
         admin.setEmail(finalEmail);
         admin.setRole("ADMIN");
+        admin.setStatus(1);
         return adminRepository.save(admin);
     }
 
