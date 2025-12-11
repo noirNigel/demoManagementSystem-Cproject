@@ -34,16 +34,18 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public Admin register(String username, String password, String confirmPassword) {
+    public Admin register(String username, String password, String confirmPassword, String email) {
         if (adminRepository.existsByUsername(username)) {
             throw new RuntimeException("用户名已存在");
         }
         if (!password.equals(confirmPassword)) {
             throw new RuntimeException("两次密码不一致");
         }
+        String finalEmail = (email == null || email.trim().isEmpty()) ? "xxx@xxx.com" : email.trim();
         Admin admin = new Admin();
         admin.setUsername(username);
         admin.setPassword(passwordEncoder.encode(password));
+        admin.setEmail(finalEmail);
         admin.setRole("ADMIN");
         return adminRepository.save(admin);
     }

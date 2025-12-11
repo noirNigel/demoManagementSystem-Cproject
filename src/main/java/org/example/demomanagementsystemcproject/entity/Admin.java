@@ -19,6 +19,10 @@ public class Admin {
     @Column(name = "password", nullable = false, length = 255)
     private String password;
 
+    /** 邮箱（注册可选，默认值 xxx@xxx.com） */
+    @Column(name = "email", nullable = false, length = 255)
+    private String email;
+
     /** 角色：ADMIN / MANAGER / STAFF 等 */
     @Column(name = "role", length = 50)
     private String role;
@@ -76,6 +80,14 @@ public class Admin {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getRole() {
