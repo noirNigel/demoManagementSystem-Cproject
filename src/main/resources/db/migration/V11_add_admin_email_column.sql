@@ -1,5 +1,3 @@
--- Add email column for admins with a safe check for MySQL 5.7+
--- Default value matches registration fallback requirement
 
 SET @column_exists := (
     SELECT COUNT(*)
@@ -18,5 +16,21 @@ PREPARE stmt FROM @ddl;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
--- Ensure existing rows have a value if column already existed without data
-UPDATE admin SET email = 'xxx@xxx.com' WHERE email IS NULL OR email = '';
+-- Re-check the column before updating existing rows to avoid failures if the
+-- DDL branch above was skipped (e.g. variable reuse during manual execution).
+SET @column_exists := (
+    SELECT COUNT(*)
+    FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'admin'
+      AND COLUMN_NAME = 'email'
+);
+
+SET @update_sql := IF(
+    @column_exists > 0,
+    'UPDATE admin SET email = ''xxx@xxx.com'' WHERE email IS NULL OR email = '''';',
+    'SELECT 1;'
+);
+PREPARE stmt FROM @update_sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
