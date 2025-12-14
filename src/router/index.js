@@ -24,6 +24,7 @@ const PromotionList = () => import('@/view/marketing/PromotionList.vue');
 const PromotionForm = () => import('@/view/marketing/PromotionForm.vue');
 const PointsMall = () => import('@/view/marketing/PointsMall.vue');
 const PointsExchange = () => import('@/view/marketing/PointsExchange.vue');
+const BannerList = () => import('@/view/marketing/BannerList.vue');
 
 // 登录页（视项目实现而定，若路径不同请改）
 const Login = () => import('@/view/Login.vue');
@@ -69,6 +70,8 @@ const routes = [
             { path: 'coupons/edit/:id', name: 'CouponEdit', component: CouponForm, meta: { requiresAuth: true, title: '编辑优惠券' } },
 
             { path: 'member-levels', name: 'MemberLevelList', component: MemberLevelList, meta: { requiresAuth: true, title: '会员等级' } },
+
+            { path: 'banners', name: 'BannerList', component: BannerList, meta: { requiresAuth: true, title: '轮播图管理' } },
 
             { path: 'promotions', name: 'PromotionList', component: PromotionList, meta: { requiresAuth: true, title: '促销活动' } },
             { path: 'promotions/add', name: 'PromotionAdd', component: PromotionForm, meta: { requiresAuth: true, title: '添加促销活动' } },
