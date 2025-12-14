@@ -14,7 +14,7 @@ public class MarketingBannerEntity {
     @Column(nullable = false)
     private String title;
 
-    @Column(name = "image_url", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "image_url", nullable = false, columnDefinition = "LONGTEXT")
     private String imageUrl;
 
     @Column(name = "link_url", columnDefinition = "TEXT")
