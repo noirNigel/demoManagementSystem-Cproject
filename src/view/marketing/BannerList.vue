@@ -73,9 +73,21 @@
         <el-form-item label="标题" prop="title">
           <el-input v-model="formData.title" placeholder="请输入轮播图标题" />
         </el-form-item>
-        <el-form-item label="图片地址" prop="imageUrl">
-          <el-input v-model="formData.imageUrl" placeholder="请输入图片 URL" />
-          <div class="form-tip">需提供可访问的图片地址</div>
+        <el-form-item label="轮播图片" prop="imageUrl">
+          <el-upload
+              class="banner-uploader"
+              action=""
+              list-type="picture-card"
+              :auto-upload="false"
+              :show-file-list="true"
+              :file-list="fileList"
+              accept="image/*"
+              :before-upload="handleImageSelect"
+              :on-remove="handleImageRemove"
+          >
+            <el-icon><Plus /></el-icon>
+          </el-upload>
+          <div class="form-tip">仅支持本地上传图片（JPG/PNG），建议不超过 2MB</div>
         </el-form-item>
         <el-form-item label="跳转链接" prop="linkUrl">
           <el-input v-model="formData.linkUrl" placeholder="点击后跳转的页面地址，可选" />
@@ -121,6 +133,7 @@
 <script setup>
 import { onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Plus } from '@element-plus/icons-vue'
 import { bannerApi } from '@/api/marketing'
 import dayjs from 'dayjs'
 
@@ -130,6 +143,7 @@ const dialogVisible = ref(false)
 const dialogMode = ref('create')
 const formRef = ref()
 const dateRange = ref([])
+const fileList = ref([])
 
 const formData = reactive({
   id: null,
@@ -145,7 +159,7 @@ const formData = reactive({
 
 const rules = {
   title: [{ required: true, message: '请输入标题', trigger: 'blur' }],
-  imageUrl: [{ required: true, message: '请输入图片地址', trigger: 'blur' }]
+  imageUrl: [{ required: true, message: '请上传轮播图片', trigger: 'change' }]
 }
 
 const resetForm = () => {
@@ -159,6 +173,7 @@ const resetForm = () => {
   formData.sortOrder = 0
   formData.description = ''
   dateRange.value = []
+  fileList.value = []
   formRef.value?.clearValidate()
 }
 
@@ -187,6 +202,9 @@ const handleEdit = (row) => {
   Object.assign(formData, row)
   if (row.startTime || row.endTime) {
     dateRange.value = [row.startTime, row.endTime].filter(Boolean)
+  }
+  if (row.imageUrl) {
+    fileList.value = [{ name: row.title || 'banner', url: row.imageUrl }]
   }
   dialogVisible.value = true
 }
@@ -233,6 +251,34 @@ const handleDelete = (row) => {
   }).catch(() => {})
 }
 
+const handleImageSelect = (file) => {
+  const isImage = file.type?.startsWith('image/')
+  const isLt2M = file.size / 1024 / 1024 < 2
+
+  if (!isImage) {
+    ElMessage.error('只能上传图片文件')
+    return false
+  }
+  if (!isLt2M) {
+    ElMessage.error('图片大小不能超过 2MB')
+    return false
+  }
+
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    formData.imageUrl = e.target?.result || ''
+    fileList.value = [{ name: file.name, url: formData.imageUrl }]
+  }
+  reader.readAsDataURL(file)
+
+  return false
+}
+
+const handleImageRemove = () => {
+  formData.imageUrl = ''
+  fileList.value = []
+}
+
 const handleUpdateStatus = async (row) => {
   const nextStatus = row.status === 1 ? 0 : 1
   try {
@@ -275,5 +321,17 @@ onMounted(fetchData)
   margin-top: 6px;
   color: #909399;
   font-size: 12px;
+}
+</style>
+
+<style scoped>
+.banner-uploader :deep(.el-upload--picture-card) {
+  width: 140px;
+  height: 140px;
+}
+
+.banner-uploader :deep(.el-upload-list__item) {
+  width: 140px;
+  height: 140px;
 }
 </style>
