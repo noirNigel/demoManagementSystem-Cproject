@@ -113,6 +113,8 @@ public class MarketingBannerServiceImpl implements MarketingBannerService {
         MarketingBannerDTO dto = new MarketingBannerDTO();
         BeanUtils.copyProperties(entity, dto);
 
+        dto.setImageUrl(normalizeImageSource(entity.getImageUrl()));
+
         LocalDateTime now = LocalDateTime.now();
         boolean activeStatus = (entity.getStatus() == null || entity.getStatus() == 1)
                 && (entity.getStartTime() == null || !now.isBefore(entity.getStartTime()))
@@ -120,5 +122,24 @@ public class MarketingBannerServiceImpl implements MarketingBannerService {
         dto.setIsActive(activeStatus);
 
         return dto;
+    }
+
+    /**
+     * 后台存储的是本地上传图片的 base64 数据。如果前端/小程序没有传入 data:image/** 前缀，
+     * 这里补全成可直接展示的 data URI，便于 <img> 和小程序 <image> 标签加载。
+     */
+    private String normalizeImageSource(String raw) {
+        if (raw == null || raw.trim().isEmpty()) {
+            return raw;
+        }
+        String value = raw.trim();
+
+        // 已经是完整的可访问地址或 data URI，直接返回
+        if (value.startsWith("http://") || value.startsWith("https://") || value.startsWith("data:")) {
+            return value;
+        }
+
+        // 如果缺少 data URI 头，则补全一个通用的 PNG 前缀，确保前端能够展示
+        return "data:image/png;base64," + value;
     }
 }
