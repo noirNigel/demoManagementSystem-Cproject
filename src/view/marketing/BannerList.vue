@@ -134,7 +134,7 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref, watch } from 'vue'
+import { nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { bannerApi } from '@/api/marketing'
@@ -271,6 +271,7 @@ const handleImageSelect = (file) => {
   reader.onload = (e) => {
     formData.imageUrl = e.target?.result || ''
     fileList.value = [{ name: file.name, url: formData.imageUrl }]
+    nextTick(() => formRef.value?.validateField('imageUrl'))
   }
   reader.readAsDataURL(file)
 
@@ -280,6 +281,7 @@ const handleImageSelect = (file) => {
 const handleImageRemove = () => {
   formData.imageUrl = ''
   fileList.value = []
+  formRef.value?.validateField('imageUrl')
 }
 
 const handleUpdateStatus = async (row) => {
