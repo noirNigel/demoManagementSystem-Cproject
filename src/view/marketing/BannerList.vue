@@ -81,8 +81,9 @@
               :auto-upload="false"
               :show-file-list="true"
               :file-list="fileList"
+              :limit="1"
               accept="image/*"
-              :before-upload="handleImageSelect"
+              :on-change="handleImageSelect"
               :on-remove="handleImageRemove"
               aria-label="上传轮播图片"
               title="上传轮播图片"
@@ -255,8 +256,9 @@ const handleDelete = (row) => {
 }
 
 const handleImageSelect = (file) => {
-  const isImage = file.type?.startsWith('image/')
-  const isLt2M = file.size / 1024 / 1024 < 2
+  const rawFile = file.raw || file
+  const isImage = rawFile?.type?.startsWith('image/')
+  const isLt2M = rawFile && rawFile.size / 1024 / 1024 < 2
 
   if (!isImage) {
     ElMessage.error('只能上传图片文件')
@@ -270,10 +272,10 @@ const handleImageSelect = (file) => {
   const reader = new FileReader()
   reader.onload = (e) => {
     formData.imageUrl = e.target?.result || ''
-    fileList.value = [{ name: file.name, url: formData.imageUrl }]
+    fileList.value = [{ name: rawFile.name || file.name, url: formData.imageUrl }]
     nextTick(() => formRef.value?.validateField('imageUrl'))
   }
-  reader.readAsDataURL(file)
+  reader.readAsDataURL(rawFile)
 
   return false
 }
