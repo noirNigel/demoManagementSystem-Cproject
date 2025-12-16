@@ -23,15 +23,15 @@ public class MarketingBannerController {
     }
 
     @GetMapping
-    public ResponseEntity<List<MarketingBannerDTO>> getAllBanners() {
+    public ResponseEntity<Map<String, Object>> getAllBanners() {
         List<MarketingBannerDTO> banners = marketingBannerService.getAllBanners();
         logger.info("查询到轮播图数量: {}", banners.size());
-        return ResponseEntity.ok(banners);
+        return ResponseEntity.ok(Map.of("data", banners));
     }
 
     @GetMapping("/active")
-    public ResponseEntity<List<MarketingBannerDTO>> getActiveBanners() {
-        return ResponseEntity.ok(marketingBannerService.getActiveBanners());
+    public ResponseEntity<Map<String, Object>> getActiveBanners() {
+        return ResponseEntity.ok(Map.of("data", marketingBannerService.getActiveBanners()));
     }
 
     @GetMapping("/{id}")
