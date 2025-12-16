@@ -15,6 +15,10 @@
             <el-icon><Star /></el-icon>
             <span>会员等级</span>
           </el-menu-item>
+          <el-menu-item index="/admin/marketing/banners">
+            <el-icon><Picture /></el-icon>
+            <span>轮播图管理</span>
+          </el-menu-item>
           <el-menu-item index="/admin/marketing/promotions">
             <el-icon><Promotion /></el-icon>
             <span>促销活动</span>
@@ -38,7 +42,7 @@
 </template>
 
 <script setup>
-import { Ticket, Star, Promotion, Goods, List } from '@element-plus/icons-vue'
+import { Ticket, Star, Promotion, Goods, List, Picture } from '@element-plus/icons-vue'
 </script>
 
 <style scoped>
