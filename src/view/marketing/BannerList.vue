@@ -91,7 +91,7 @@
             <el-icon><Plus /></el-icon>
             <span class="sr-only">上传轮播图片</span>
           </el-upload>
-          <div class="form-tip">仅支持本地上传图片（JPG/PNG），建议不超过 2MB</div>
+          <div class="form-tip">仅支持本地上传图片（JPG/PNG），大小不限</div>
         </el-form-item>
         <el-form-item label="跳转链接" prop="linkUrl">
           <el-input v-model="formData.linkUrl" placeholder="点击后跳转的页面地址，可选" />
@@ -258,14 +258,9 @@ const handleDelete = (row) => {
 const handleImageSelect = (file) => {
   const rawFile = file.raw || file
   const isImage = rawFile?.type?.startsWith('image/')
-  const isLt2M = rawFile && rawFile.size / 1024 / 1024 < 2
 
   if (!isImage) {
     ElMessage.error('只能上传图片文件')
-    return false
-  }
-  if (!isLt2M) {
-    ElMessage.error('图片大小不能超过 2MB')
     return false
   }
 
