@@ -35,6 +35,14 @@ public class Admin {
     @Column(name = "store_id")
     private Long storeId;
 
+    /** 地址（最多 30 个汉字） */
+    @Column(name = "address", length = 90)
+    private String address;
+
+    /** 积分（可用于积分商城兑换） */
+    @Column(name = "points")
+    private Integer points = 0;
+
     /** 创建时间 */
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -49,6 +57,9 @@ public class Admin {
     public void prePersist() {
         if (this.status == null) {
             this.status = 1;
+        }
+        if (this.points == null) {
+            this.points = 0;
         }
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
@@ -115,6 +126,22 @@ public class Admin {
 
     public void setStoreId(Long storeId) {
         this.storeId = storeId;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public Integer getPoints() {
+        return points;
+    }
+
+    public void setPoints(Integer points) {
+        this.points = points;
     }
 
     public LocalDateTime getCreatedAt() {

@@ -1,0 +1,3 @@
+ALTER TABLE admin
+    ADD COLUMN address VARCHAR(90),
+    ADD COLUMN points INT DEFAULT 0;
