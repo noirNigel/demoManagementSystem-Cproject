@@ -40,13 +40,21 @@ public class SecurityConfig {
                                 "/api/orders/*",
                                 "/api/orders",
                                 "/api/orders/**",
-                                "/api/coupons/**"
+                                "/api/coupons/**",
+                                "/api/addresses/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST,
                                 "/api/orders",
                                 "/api/orders/refund",
                                 "/api/marketing/coupons/claim",
-                                "/api/coupons/claim"
+                                "/api/coupons/claim",
+                                "/api/addresses/**"
+                        ).permitAll()
+                        .requestMatchers(HttpMethod.PUT,
+                                "/api/addresses/**"
+                        ).permitAll()
+                        .requestMatchers(HttpMethod.DELETE,
+                                "/api/addresses/**"
                         ).permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .anyRequest().authenticated()
