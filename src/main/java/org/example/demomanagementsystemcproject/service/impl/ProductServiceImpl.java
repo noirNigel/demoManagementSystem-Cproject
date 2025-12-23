@@ -1,7 +1,9 @@
 package org.example.demomanagementsystemcproject.service.impl;
 
 import org.example.demomanagementsystemcproject.dto.*;
+import org.example.demomanagementsystemcproject.entity.CategoryEntity;
 import org.example.demomanagementsystemcproject.entity.ProductEntity;
+import org.example.demomanagementsystemcproject.repo.CategoryRepository;
 import org.example.demomanagementsystemcproject.repo.ProductRepository;
 import org.example.demomanagementsystemcproject.service.ProductService;
 import org.springframework.beans.BeanUtils;
@@ -34,9 +36,12 @@ public class ProductServiceImpl implements ProductService {
     private static final int AUTO_OFF_SHELF_THRESHOLD = 5;
 
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
 
-    public ProductServiceImpl(ProductRepository productRepository) {
+    public ProductServiceImpl(ProductRepository productRepository,
+                              CategoryRepository categoryRepository) {
         this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     @Override
@@ -55,7 +60,12 @@ public class ProductServiceImpl implements ProductService {
             }
 
             if (query.getCategoryId() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("categoryId"), query.getCategoryId()));
+                List<Long> categoryIds = resolveCategoryIds(query.getCategoryId());
+                if (!categoryIds.isEmpty()) {
+                    predicates.add(root.get("categoryId").in(categoryIds));
+                } else {
+                    predicates.add(criteriaBuilder.equal(root.get("categoryId"), query.getCategoryId()));
+                }
             }
 
             if (query.getStatus() != null) {
@@ -69,14 +79,15 @@ public class ProductServiceImpl implements ProductService {
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
 
-        return productRepository.findAll(spec, pageable).map(this::convertToDTO);
+        Page<ProductEntity> page = productRepository.findAll(spec, pageable);
+        return mapWithCategoryNames(page);
     }
 
     @Override
     public ProductDTO getProductById(Long id) {
         ProductEntity entity = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("商品不存在"));
-        return convertToDTO(entity);
+        return convertToDTO(entity, null);
     }
 
     @Override
@@ -91,7 +102,7 @@ public class ProductServiceImpl implements ProductService {
         ProductEntity entity = new ProductEntity();
         applyDtoToEntity(productDTO, entity);
         ProductEntity saved = productRepository.save(entity);
-        return convertToDTO(saved);
+        return convertToDTO(saved, null);
     }
 
     @Override
@@ -108,7 +119,7 @@ public class ProductServiceImpl implements ProductService {
 
         applyDtoToEntity(productDTO, entity);
         ProductEntity saved = productRepository.save(entity);
-        return convertToDTO(saved);
+        return convertToDTO(saved, null);
     }
 
     @Override
@@ -174,7 +185,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public List<ProductDTO> getLowStockProducts() {
         return productRepository.findLowStockProducts().stream()
-                .map(this::convertToDTO)
+                .map(entity -> convertToDTO(entity, null))
                 .collect(Collectors.toList());
     }
 
@@ -195,10 +206,45 @@ public class ProductServiceImpl implements ProductService {
         enforceAutoOffShelf(entity);
     }
 
-    private ProductDTO convertToDTO(ProductEntity entity) {
+    private ProductDTO convertToDTO(ProductEntity entity, Map<Long, String> categoryNameMap) {
         ProductDTO dto = new ProductDTO();
         BeanUtils.copyProperties(entity, dto);
+        Long categoryId = entity.getCategoryId();
+        if (categoryId != null) {
+            String categoryName = categoryNameMap != null
+                    ? categoryNameMap.get(categoryId)
+                    : null;
+            if (categoryName == null) {
+                categoryName = categoryRepository.findById(categoryId)
+                        .map(CategoryEntity::getName)
+                        .orElse(null);
+            }
+            dto.setCategoryName(categoryName);
+        }
         return dto;
+    }
+
+    private Page<ProductDTO> mapWithCategoryNames(Page<ProductEntity> page) {
+        List<Long> categoryIds = page.getContent().stream()
+                .map(ProductEntity::getCategoryId)
+                .filter(id -> id != null)
+                .distinct()
+                .collect(Collectors.toList());
+        Map<Long, String> categoryNameMap = categoryIds.isEmpty()
+                ? Map.of()
+                : categoryRepository.findAllById(categoryIds).stream()
+                    .collect(Collectors.toMap(CategoryEntity::getId, CategoryEntity::getName));
+        return page.map(entity -> convertToDTO(entity, categoryNameMap));
+    }
+
+    private List<Long> resolveCategoryIds(Long categoryId) {
+        List<CategoryEntity> children = categoryRepository.findByParentId(categoryId);
+        if (children == null || children.isEmpty()) {
+            return List.of(categoryId);
+        }
+        return children.stream()
+                .map(CategoryEntity::getId)
+                .collect(Collectors.toList());
     }
 
     private void enforceAutoOffShelf(ProductEntity entity) {
