@@ -39,6 +39,18 @@ public class Admin {
     @Column(name = "address", length = 90)
     private String address;
 
+    /** 标签（与 address 一一对应，建议使用 JSON 数组存储） */
+    @Column(name = "address_tags", columnDefinition = "TEXT")
+    private String addressTags;
+
+    /** 联系方式 */
+    @Column(name = "contact_info", length = 255)
+    private String contactInfo;
+
+    /** 收货人 */
+    @Column(name = "receiver_name", length = 100)
+    private String receiverName;
+
     /** 积分（可用于积分商城兑换） */
     @Column(name = "points")
     private Integer points = 0;
@@ -134,6 +146,30 @@ public class Admin {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public String getAddressTags() {
+        return addressTags;
+    }
+
+    public void setAddressTags(String addressTags) {
+        this.addressTags = addressTags;
+    }
+
+    public String getContactInfo() {
+        return contactInfo;
+    }
+
+    public void setContactInfo(String contactInfo) {
+        this.contactInfo = contactInfo;
+    }
+
+    public String getReceiverName() {
+        return receiverName;
+    }
+
+    public void setReceiverName(String receiverName) {
+        this.receiverName = receiverName;
     }
 
     public Integer getPoints() {
