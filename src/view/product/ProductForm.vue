@@ -66,7 +66,7 @@
               >
                 <el-button type="primary">上传图片</el-button>
                 <template #tip>
-                  <div class="el-upload__tip">支持 jpg、png 格式图片</div>
+                  <div class="el-upload__tip">支持 jpg、png 等图片格式，上传后将自动压缩为合理尺寸</div>
                 </template>
               </el-upload>
               <div v-if="formData.image" class="image-preview">
@@ -80,6 +80,27 @@
                     删除
                   </el-button>
                 </div>
+              </div>
+            </el-form-item>
+
+            <el-form-item label="轮播图设置">
+              <div class="carousel-list">
+                <div
+                    v-for="(url, index) in carouselImages"
+                    :key="index"
+                    class="carousel-row"
+                >
+                  <el-input
+                      v-model="carouselImages[index]"
+                      placeholder="请输入轮播图地址"
+                  />
+                  <el-button
+                      link
+                      type="danger"
+                      @click="removeCarouselImage(index)"
+                  >删除</el-button>
+                </div>
+                <el-button type="primary" link @click="addCarouselImage">添加轮播图</el-button>
               </div>
             </el-form-item>
 
@@ -195,6 +216,8 @@ const formData = reactive({
   recipe: ''
 })
 
+const carouselImages = ref([])
+
 // 表单验证规则
 const rules = {
   name: [
@@ -249,19 +272,57 @@ const loadCategoryTree = async () => {
 const loadProductDetail = async () => {
   try {
     const response = await api.get(`/api/products/${route.params.id}`)
-    Object.assign(formData, response)
+
+    // 兼容后端返回的不同字段命名，确保图片与描述能够正常回显
+    formData.name = response.name || ''
+    formData.sku = response.sku || ''
+    formData.categoryId = response.categoryId || null
+    formData.status = response.status ?? 1
+    formData.price = response.price ?? 0
+    formData.cost = response.cost ?? 0
+    formData.stock = response.stock ?? 0
+    formData.warningThreshold = response.warningThreshold ?? 10
+    formData.image = response.image || response.imageUrl || ''
+    formData.description = response.description || response.desc || ''
+    formData.recipe = response.recipe || ''
+    try {
+      carouselImages.value = response.images ? JSON.parse(response.images) : []
+    } catch (e) {
+      carouselImages.value = []
+    }
   } catch (error) {
     console.error('加载商品详情失败:', error)
     ElMessage.error('加载商品详情失败')
   }
 }
 
-// 图片上传处理
+// 将上传的图片自动压缩到合理尺寸后再转成 Base64，避免上传大小限制
 const handleImageChange = (file) => {
-  // 这里简化处理，实际项目中需要上传到服务器
   const reader = new FileReader()
   reader.onload = (e) => {
-    formData.image = e.target.result
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      const maxDimension = 1280 // 限制最长边，但不限制原始文件大小
+      let { width, height } = img
+
+      const longestSide = Math.max(width, height)
+      if (longestSide > maxDimension) {
+        const scale = maxDimension / longestSide
+        width *= scale
+        height *= scale
+      }
+
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(img, 0, 0, width, height)
+
+      // 以较高质量输出，确保清晰度；不再对 Base64 长度进行限制
+      formData.image = canvas.toDataURL('image/jpeg', 0.85)
+      ElMessage.success('图片已自动压缩并保存')
+    }
+    img.src = e.target.result
   }
   reader.readAsDataURL(file.raw)
 }
@@ -274,6 +335,11 @@ const handleSave = async () => {
     loading.value = true
 
     const submitData = { ...formData }
+    submitData.images = JSON.stringify(carouselImages.value.filter(item => item))
+
+    // 同步可能存在的后端字段命名差异
+    submitData.imageUrl = submitData.image
+    submitData.desc = submitData.description
     if (Array.isArray(submitData.categoryId)) {
       submitData.categoryId = submitData.categoryId[submitData.categoryId.length - 1]
     }
@@ -302,6 +368,15 @@ const handleSave = async () => {
 // 取消
 const handleCancel = () => {
   router.push('/admin/products')
+}
+
+// 轮播图管理
+const addCarouselImage = () => {
+  carouselImages.value.push('')
+}
+
+const removeCarouselImage = (index) => {
+  carouselImages.value.splice(index, 1)
 }
 
 // 生命周期
@@ -353,5 +428,21 @@ onMounted(() => {
   margin: 8px 0 0;
   font-size: 12px;
   color: #666;
+}
+
+.carousel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.carousel-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.carousel-row .el-input {
+  flex: 1;
 }
 </style>

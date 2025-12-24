@@ -19,17 +19,41 @@ public class Admin {
     @Column(name = "password", nullable = false, length = 255)
     private String password;
 
+    /** 邮箱（注册可选，默认值 xxx@xxx.com） */
+    @Column(name = "email", nullable = false, length = 255)
+    private String email;
+
     /** 角色：ADMIN / MANAGER / STAFF 等 */
     @Column(name = "role", length = 50)
     private String role;
 
     /** 账号状态：1 启用，0 禁用 */
     @Column(name = "status")
-    private Integer status;
+    private Integer status = 1;
 
     /** 所属门店 ID（多门店支持） */
     @Column(name = "store_id")
     private Long storeId;
+
+    /** 地址（最多 30 个汉字） */
+    @Column(name = "address", length = 90)
+    private String address;
+
+    /** 标签（与 address 一一对应，建议使用 JSON 数组存储） */
+    @Column(name = "address_tags", columnDefinition = "TEXT")
+    private String addressTags;
+
+    /** 联系方式 */
+    @Column(name = "contact_info", length = 255)
+    private String contactInfo;
+
+    /** 收货人 */
+    @Column(name = "receiver_name", length = 100)
+    private String receiverName;
+
+    /** 积分（可用于积分商城兑换） */
+    @Column(name = "points")
+    private Integer points = 0;
 
     /** 创建时间 */
     @Column(name = "created_at")
@@ -43,6 +67,12 @@ public class Admin {
 
     @PrePersist
     public void prePersist() {
+        if (this.status == null) {
+            this.status = 1;
+        }
+        if (this.points == null) {
+            this.points = 0;
+        }
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -78,6 +108,14 @@ public class Admin {
         this.password = password;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
     public String getRole() {
         return role;
     }
@@ -100,6 +138,46 @@ public class Admin {
 
     public void setStoreId(Long storeId) {
         this.storeId = storeId;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public String getAddressTags() {
+        return addressTags;
+    }
+
+    public void setAddressTags(String addressTags) {
+        this.addressTags = addressTags;
+    }
+
+    public String getContactInfo() {
+        return contactInfo;
+    }
+
+    public void setContactInfo(String contactInfo) {
+        this.contactInfo = contactInfo;
+    }
+
+    public String getReceiverName() {
+        return receiverName;
+    }
+
+    public void setReceiverName(String receiverName) {
+        this.receiverName = receiverName;
+    }
+
+    public Integer getPoints() {
+        return points;
+    }
+
+    public void setPoints(Integer points) {
+        this.points = points;
     }
 
     public LocalDateTime getCreatedAt() {

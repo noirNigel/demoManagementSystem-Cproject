@@ -8,8 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.sql.Date;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
 
 @Service
@@ -45,9 +45,23 @@ public class DashboardService {
         // map day -> (orders, sales)
         Map<LocalDate, Object[]> map = new HashMap<>();
         for (Object[] r : rows) {
-            // r[0] is java.sql.Date
-            Date d = (Date) r[0];
-            map.put(d.toLocalDate(), r);
+            Object day = r[0];
+            if (day == null) {
+                continue;
+            }
+
+            LocalDate localDate;
+            if (day instanceof java.sql.Date d) {
+                localDate = d.toLocalDate();
+            } else if (day instanceof LocalDate d) {
+                localDate = d;
+            } else if (day instanceof java.util.Date d) {
+                localDate = d.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            } else {
+                continue;
+            }
+
+            map.put(localDate, r);
         }
 
         List<DayCountDTO> out = new ArrayList<>();

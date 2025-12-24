@@ -31,35 +31,43 @@ public class ProductEntity {
     @Column(name = "category_id")
     private Long categoryId;
 
-    // 如果数据库中没有这些字段，先注释掉或删除
-    // @Column(name = "category_path")
-    // private String categoryPath;
+    @Column(name = "category_path")
+    private String categoryPath;
 
-    // @Column(columnDefinition = "TEXT")
-    // private String recipe;
+    @Lob
+    @Column(columnDefinition = "TEXT")
+    private String recipe;
 
-    // private String image;
+    @Lob
+    @Column(name = "image", columnDefinition = "LONGTEXT")
+    private String image;
 
-    // private String description;
+    /** 商品轮播图（JSON 数组字符串） */
+    @Lob
+    @Column(name = "images", columnDefinition = "LONGTEXT")
+    private String images;
+
+    @Lob
+    @Column(columnDefinition = "TEXT")
+    private String description;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    // 如果数据库中没有updated_at字段，先注释掉
-    // @Column(name = "updated_at")
-    // private LocalDateTime updatedAt;
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     // getters and setters
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
-        // updatedAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
     }
 
-    // @PreUpdate
-    // protected void onUpdate() {
-    //     updatedAt = LocalDateTime.now();
-    // }
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 
     // 只保留基本的getter/setter，移除新增的字段
     public Long getId() { return id; }
@@ -92,15 +100,20 @@ public class ProductEntity {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    // 移除新增字段的getter/setter
-    // public String getCategoryPath() { return categoryPath; }
-    // public void setCategoryPath(String categoryPath) { this.categoryPath = categoryPath; }
-    // public String getRecipe() { return recipe; }
-    // public void setRecipe(String recipe) { this.recipe = recipe; }
-    // public String getImage() { return image; }
-    // public void setImage(String image) { this.image = image; }
-    // public String getDescription() { return description; }
-    // public void setDescription(String description) { this.description = description; }
-    // public LocalDateTime getUpdatedAt() { return updatedAt; }
-    // public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public String getCategoryPath() { return categoryPath; }
+    public void setCategoryPath(String categoryPath) { this.categoryPath = categoryPath; }
+
+    public String getRecipe() { return recipe; }
+    public void setRecipe(String recipe) { this.recipe = recipe; }
+
+    public String getImage() { return image; }
+    public void setImage(String image) { this.image = image; }
+
+    public String getImages() { return images; }
+    public void setImages(String images) { this.images = images; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

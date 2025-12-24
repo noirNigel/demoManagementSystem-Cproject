@@ -8,7 +8,7 @@ public interface AdminService {
     Admin login(String username, String password);
 
     // 注册
-    Admin register(String username, String password, String confirmPassword);
+    Admin register(String username, String password, String confirmPassword, String email);
 
     // 检查用户名是否存在
     boolean checkUsernameExists(String username);

@@ -26,4 +26,7 @@ public interface MemberLevelRepository extends JpaRepository<MemberLevelEntity, 
     // 新增：查询所有非空状态的会员等级并按积分降序排列
     @Query("SELECT ml FROM MemberLevelEntity ml WHERE ml.status IS NOT NULL ORDER BY ml.minPoints DESC")
     List<MemberLevelEntity> findByStatusIsNotNullOrderByMinPointsDesc();
+
+    @Query("SELECT ml FROM MemberLevelEntity ml WHERE ml.status = 1 ORDER BY ml.sortOrder ASC, ml.minPoints ASC")
+    List<MemberLevelEntity> findActiveLevels();
 }

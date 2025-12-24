@@ -84,6 +84,49 @@
         />
       </div>
     </el-card>
+
+    <!-- 新增 / 编辑对话框 -->
+    <el-dialog
+        v-model="dialogVisible"
+        :title="dialogTitle"
+        width="600px"
+    >
+      <el-form :model="formData" :rules="rules" ref="formRef" label-width="100px">
+        <el-form-item label="商品名称" prop="name">
+          <el-input v-model="formData.name" placeholder="请输入商品名称" />
+        </el-form-item>
+        <el-form-item label="商品图片">
+          <el-input v-model="formData.image" placeholder="请输入图片地址" />
+        </el-form-item>
+        <el-form-item label="所需积分" prop="pointsRequired">
+          <el-input-number v-model="formData.pointsRequired" :min="1" />
+        </el-form-item>
+        <el-form-item label="原价">
+          <el-input-number v-model="formData.originalPrice" :min="0" :precision="2" />
+        </el-form-item>
+        <el-form-item label="库存" prop="stock">
+          <el-input-number v-model="formData.stock" :min="0" />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-radio-group v-model="formData.status">
+            <el-radio :label="1">上架</el-radio>
+            <el-radio :label="0">下架</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="商品描述">
+          <el-input
+              v-model="formData.description"
+              type="textarea"
+              :rows="3"
+              placeholder="请输入商品描述"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSubmit">保存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -107,6 +150,27 @@ const queryParams = reactive({
   page: 1,
   size: 10
 })
+
+// 表单
+const dialogVisible = ref(false)
+const dialogTitle = ref('添加积分商品')
+const formRef = ref()
+const formData = reactive({
+  id: null,
+  name: '',
+  image: '',
+  pointsRequired: 1,
+  originalPrice: 0,
+  stock: 0,
+  status: 1,
+  description: ''
+})
+
+const rules = {
+  name: [{ required: true, message: '请输入商品名称', trigger: 'blur' }],
+  pointsRequired: [{ required: true, message: '请输入所需积分', trigger: 'change' }],
+  stock: [{ required: true, message: '请输入库存', trigger: 'change' }]
+}
 
 // 加载积分商品列表
 const loadGoods = async () => {
@@ -141,14 +205,16 @@ const handleReset = () => {
 
 // 添加积分商品
 const handleAdd = () => {
-  // 这里可以跳转到添加页面或打开对话框
-  ElMessage.info('添加功能开发中')
+  dialogTitle.value = '添加积分商品'
+  resetForm()
+  dialogVisible.value = true
 }
 
 // 编辑积分商品
 const handleEdit = (row) => {
-  // 这里可以跳转到编辑页面或打开对话框
-  ElMessage.info('编辑功能开发中')
+  dialogTitle.value = '编辑积分商品'
+  resetForm(row)
+  dialogVisible.value = true
 }
 
 // 更新积分商品状态
@@ -162,6 +228,41 @@ const handleUpdateStatus = async (row) => {
     console.error('操作失败:', error)
     ElMessage.error('操作失败')
   }
+}
+
+// 保存积分商品
+const handleSubmit = async () => {
+  try {
+    await formRef.value.validate()
+    const payload = { ...formData }
+    if (formData.id) {
+      await pointsMallApi.updateGoods(formData.id, payload)
+      ElMessage.success('更新成功')
+    } else {
+      await pointsMallApi.createGoods(payload)
+      ElMessage.success('创建成功')
+    }
+    dialogVisible.value = false
+    loadGoods()
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('保存失败:', error)
+      ElMessage.error(error.response?.data?.message || '保存失败')
+    }
+  }
+}
+
+const resetForm = (row) => {
+  Object.assign(formData, {
+    id: row?.id || null,
+    name: row?.name || '',
+    image: row?.image || '',
+    pointsRequired: row?.pointsRequired ?? 1,
+    originalPrice: row?.originalPrice ?? 0,
+    stock: row?.stock ?? 0,
+    status: row?.status ?? 1,
+    description: row?.description || ''
+  })
 }
 
 // 删除积分商品

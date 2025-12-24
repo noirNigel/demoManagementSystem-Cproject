@@ -16,4 +16,6 @@ public interface MemberLevelService {
     MemberLevelDTO getUserLevel(Integer points);
     BigDecimal calculateMemberPrice(BigDecimal originalPrice, Integer userPoints);
     Integer calculateEarnedPoints(BigDecimal orderAmount, Integer userPoints);
+
+    List<MemberLevelDTO> getActiveLevels();
 }

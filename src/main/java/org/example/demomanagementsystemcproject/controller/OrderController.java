@@ -24,6 +24,11 @@ public class OrderController {
         this.orderService = orderService;
     }
 
+    @PostMapping
+    public ResponseEntity<OrderDTO> createOrder(@RequestBody OrderDTO request) {
+        return ResponseEntity.ok(orderService.createOrder(request));
+    }
+
     @GetMapping
     public ResponseEntity<Page<OrderDTO>> getOrders(OrderQueryDTO query) {
         return ResponseEntity.ok(orderService.getOrders(query));

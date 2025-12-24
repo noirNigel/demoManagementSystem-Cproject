@@ -3,7 +3,7 @@ import api from '@/utils/request'
 // 优惠券相关API
 export const couponApi = {
     // 获取优惠券列表
-    getCoupons: (params) => api.get('/api/marketing/coupons', { params }),
+    getCoupons: (params) => api.get('/api/marketing/coupons/page', { params }),
     // 获取优惠券详情
     getCoupon: (id) => api.get(`/api/marketing/coupons/${id}`),
     // 创建优惠券
@@ -84,6 +84,30 @@ export const promotionApi = {
 
     // 计算促销价格
     calculatePromotionPrice: (data) => api.post('/api/marketing/promotions/calculate-price', data)
+}
+
+// 轮播图管理 API
+export const bannerApi = {
+    // 获取全部轮播图
+    getBanners: () => api.get('/api/marketing/banners'),
+
+    // 获取单个轮播图详情
+    getBanner: (id) => api.get(`/api/marketing/banners/${id}`),
+
+    // 创建轮播图
+    createBanner: (data) => api.post('/api/marketing/banners', data),
+
+    // 更新轮播图
+    updateBanner: (id, data) => api.put(`/api/marketing/banners/${id}`, data),
+
+    // 删除轮播图
+    deleteBanner: (id) => api.delete(`/api/marketing/banners/${id}`),
+
+    // 更新轮播图状态
+    updateBannerStatus: (id, status) => api.put(`/api/marketing/banners/${id}/status`, { status }),
+
+    // 获取已启用的轮播图
+    getActiveBanners: () => api.get('/api/marketing/banners/active')
 }
 // 积分商城相关API
 export const pointsMallApi = {

@@ -26,6 +26,12 @@ public class MemberLevelEntity {
     @Column(name = "birthday_benefit")
     private String birthdayBenefit;
 
+    @Column(name = "benefits", columnDefinition = "TEXT")
+    private String benefits;
+
+    @Column(name = "sort_order")
+    private Integer sortOrder = 0;
+
     private Integer status = 1;
 
     @Column(name = "created_at")
@@ -58,6 +64,10 @@ public class MemberLevelEntity {
     public void setPointsMultiplier(BigDecimal pointsMultiplier) { this.pointsMultiplier = pointsMultiplier; }
     public String getBirthdayBenefit() { return birthdayBenefit; }
     public void setBirthdayBenefit(String birthdayBenefit) { this.birthdayBenefit = birthdayBenefit; }
+    public String getBenefits() { return benefits; }
+    public void setBenefits(String benefits) { this.benefits = benefits; }
+    public Integer getSortOrder() { return sortOrder; }
+    public void setSortOrder(Integer sortOrder) { this.sortOrder = sortOrder; }
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }
     public LocalDateTime getCreatedAt() { return createdAt; }

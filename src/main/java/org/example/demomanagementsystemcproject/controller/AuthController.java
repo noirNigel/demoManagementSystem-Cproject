@@ -38,6 +38,7 @@ public class AuthController {
             put("token", token);
             put("username", admin.getUsername());
             put("role", admin.getRole());
+            put("userId", admin.getId());
         }};
     }
 
@@ -45,7 +46,7 @@ public class AuthController {
     @PostMapping("/register")
     public Object register(@RequestBody RegisterRequest request) {
         try {
-            Admin admin = adminService.register(request.getUsername(), request.getPassword(), request.getConfirmPassword());
+            Admin admin = adminService.register(request.getUsername(), request.getPassword(), request.getConfirmPassword(), request.getEmail());
             String token = jwtUtil.generateToken(admin.getUsername());
             return new HashMap<>() {{
                 put("code", 200);
@@ -53,6 +54,7 @@ public class AuthController {
                 put("token", token);
                 put("username", admin.getUsername());
                 put("role", admin.getRole());
+                put("userId", admin.getId());
             }};
         } catch (RuntimeException e) {
             return new HashMap<>() {{

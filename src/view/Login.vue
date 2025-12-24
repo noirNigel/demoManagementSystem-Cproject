@@ -93,6 +93,15 @@
               show-password
           />
         </el-form-item>
+        <el-form-item prop="email">
+          <el-input
+              v-model="registerForm.email"
+              type="email"
+              placeholder="邮箱（可选）"
+              size="large"
+              prefix-icon="User"
+          />
+        </el-form-item>
         <el-form-item prop="confirmPassword">
           <el-input
               v-model="registerForm.confirmPassword"
@@ -161,7 +170,8 @@ const showRegister = ref(false)
 const registerForm = reactive({
   username: '',
   password: '',
-  confirmPassword: ''
+  confirmPassword: '',
+  email: ''
 })
 
 const usernameStatus = reactive({
@@ -181,6 +191,23 @@ const registerRules = {
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
     { min: 6, message: '密码长度不能少于6位', trigger: 'blur' }
+  ],
+  email: [
+    {
+      validator: (rule, value, callback) => {
+        if (!value || value.trim() === '') {
+          callback()
+          return
+        }
+        const emailPattern = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/
+        if (!emailPattern.test(value.trim())) {
+          callback(new Error('请输入正确的邮箱格式'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
   ],
   confirmPassword: [
     { required: true, message: '请确认密码', trigger: 'blur' },
@@ -271,6 +298,11 @@ const login = async () => {
 
     if (res.code === 200) {
       localStorage.setItem('token', res.token)
+      localStorage.setItem('userInfo', JSON.stringify({
+        userId: res.userId,
+        username: res.username,
+        role: res.role
+      }))
       ElMessage.success('登录成功')
       router.push('/admin/dashboard')
     } else {
@@ -305,6 +337,11 @@ const register = async () => {
 
     if (res.code === 200) {
       localStorage.setItem('token', res.token)
+      localStorage.setItem('userInfo', JSON.stringify({
+        userId: res.userId,
+        username: res.username,
+        role: res.role
+      }))
       ElMessage.success('注册成功')
       router.push('/admin/dashboard')
     } else {

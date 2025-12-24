@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.0</version>
+        <version>3.4.3</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>org.example</groupId>
@@ -31,6 +31,7 @@
         <java.version>21</java.version>
         <spring-modulith.version>2.0.0-RC1</spring-modulith.version>
         <jjwt.version>0.11.5</jjwt.version>
+        <flyway.version>10.20.1</flyway.version>
         <maven.compiler.plugin.version>3.11.0</maven.compiler.plugin.version>
     </properties>
 
@@ -41,7 +42,7 @@
             <artifactId>spring-modulith-starter-core</artifactId>
         </dependency>
 
-        <!-- Spring Boot Starters (added to resolve missing packages) -->
+        <!-- Spring Boot Starters -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -55,6 +56,18 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
+        <!-- Flyway for database migrations -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+            <version>${flyway.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-mysql</artifactId>
+            <version>${flyway.version}</version>
         </dependency>
 
         <!-- MySQL driver -->
@@ -114,26 +127,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
-            <!-- 如果你的 pom 使用 Spring Boot Parent 管理依赖版本，请删除 <version> 行让父级管理版本 -->
-            <!-- <version>2.15.2</version> -->
         </dependency>
-
-        <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jsr310</artifactId>
-            <!-- 如果你使用 spring-boot-parent 管理依赖版本，**不要**指定 <version> -->
-            <!-- <version>2.15.2</version> -->
-        </dependency>
-
-        <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jsr310</artifactId>
-        </dependency>
-
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-web</artifactId>
-            </dependency>
 
 
     </dependencies>
