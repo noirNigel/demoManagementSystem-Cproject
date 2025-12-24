@@ -36,6 +36,7 @@ public class SecurityConfig {
                                 "/api/marketing/banners/**",
                                 "/api/promotions/**",
                                 "/api/marketing/promotions/**",
+                                "/api/member/**",
                                 "/api/orders/no/**",
                                 "/api/orders/*",
                                 "/api/orders",
