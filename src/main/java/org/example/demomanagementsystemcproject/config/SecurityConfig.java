@@ -28,6 +28,7 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/member/**").permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/categories/**",
                                 "/api/products/**",
@@ -36,7 +37,6 @@ public class SecurityConfig {
                                 "/api/marketing/banners/**",
                                 "/api/promotions/**",
                                 "/api/marketing/promotions/**",
-                                "/api/member/**",
                                 "/api/orders/no/**",
                                 "/api/orders/*",
                                 "/api/orders",
