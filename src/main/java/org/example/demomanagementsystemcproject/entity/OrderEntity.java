@@ -97,6 +97,9 @@ public class OrderEntity {
         if (payStatus == null) {
             payStatus = "UNPAID";
         }
+        if (pointsUsed == null) {
+            pointsUsed = 0;
+        }
     }
 
     @PreUpdate

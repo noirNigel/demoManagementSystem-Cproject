@@ -121,7 +121,11 @@ public class OrderServiceImpl implements OrderService {
         entity.setUserId(request.getUserId());
         entity.setStatus("NEW");
         entity.setPayStatus("UNPAID");
-        entity.setPointsUsed(request.getUsedPoints());
+        Integer usedPoints = request.getUsedPoints();
+        if (usedPoints == null) {
+            usedPoints = 0;
+        }
+        entity.setPointsUsed(usedPoints);
 
         BigDecimal goodsAmount = request.getGoodsAmount();
         BigDecimal discountAmount = request.getDiscountAmount();
@@ -204,7 +208,6 @@ public class OrderServiceImpl implements OrderService {
         entity.setPaymentTime(LocalDateTime.now());
         OrderEntity saved = orderRepository.save(entity);
 
-        Integer usedPoints = request.getUsedPoints() == null ? 0 : request.getUsedPoints();
         handlePointsOnPayment(entity.getUserId(), payAmount, usedPoints);
 
         for (OrderItemEntity item : items) {
