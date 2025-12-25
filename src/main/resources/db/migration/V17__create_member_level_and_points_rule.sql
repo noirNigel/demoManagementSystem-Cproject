@@ -22,51 +22,187 @@ CREATE TABLE IF NOT EXISTS points_rule (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Align existing tables with the expected structure when they already exist
-ALTER TABLE member_level
-    ADD COLUMN IF NOT EXISTS min_points INT NOT NULL DEFAULT 0;
+-- Align existing member_level columns without depending on ADD COLUMN IF NOT EXISTS
+SET @stmt := (
+    SELECT IF(
+        EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = DATABASE() AND table_name = 'member_level' AND column_name = 'min_points'
+        ),
+        'SELECT 1',
+        'ALTER TABLE member_level ADD COLUMN min_points INT NOT NULL DEFAULT 0'
+    )
+);
+PREPARE column_stmt FROM @stmt; EXECUTE column_stmt; DEALLOCATE PREPARE column_stmt;
 
-ALTER TABLE member_level
-    ADD COLUMN IF NOT EXISTS discount_rate DECIMAL(10,2) DEFAULT 1.00;
+SET @stmt := (
+    SELECT IF(
+        EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = DATABASE() AND table_name = 'member_level' AND column_name = 'discount_rate'
+        ),
+        'SELECT 1',
+        'ALTER TABLE member_level ADD COLUMN discount_rate DECIMAL(10,2) DEFAULT 1.00'
+    )
+);
+PREPARE column_stmt FROM @stmt; EXECUTE column_stmt; DEALLOCATE PREPARE column_stmt;
 
-ALTER TABLE member_level
-    ADD COLUMN IF NOT EXISTS points_multiplier DECIMAL(10,2) DEFAULT 1.00;
+SET @stmt := (
+    SELECT IF(
+        EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = DATABASE() AND table_name = 'member_level' AND column_name = 'points_multiplier'
+        ),
+        'SELECT 1',
+        'ALTER TABLE member_level ADD COLUMN points_multiplier DECIMAL(10,2) DEFAULT 1.00'
+    )
+);
+PREPARE column_stmt FROM @stmt; EXECUTE column_stmt; DEALLOCATE PREPARE column_stmt;
 
-ALTER TABLE member_level
-    ADD COLUMN IF NOT EXISTS birthday_benefit VARCHAR(255);
+SET @stmt := (
+    SELECT IF(
+        EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = DATABASE() AND table_name = 'member_level' AND column_name = 'birthday_benefit'
+        ),
+        'SELECT 1',
+        'ALTER TABLE member_level ADD COLUMN birthday_benefit VARCHAR(255)'
+    )
+);
+PREPARE column_stmt FROM @stmt; EXECUTE column_stmt; DEALLOCATE PREPARE column_stmt;
 
-ALTER TABLE member_level
-    ADD COLUMN IF NOT EXISTS benefits JSON NULL;
+SET @stmt := (
+    SELECT IF(
+        EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = DATABASE() AND table_name = 'member_level' AND column_name = 'benefits'
+        ),
+        'SELECT 1',
+        'ALTER TABLE member_level ADD COLUMN benefits JSON NULL'
+    )
+);
+PREPARE column_stmt FROM @stmt; EXECUTE column_stmt; DEALLOCATE PREPARE column_stmt;
 
-ALTER TABLE member_level
-    ADD COLUMN IF NOT EXISTS sort_order INT NOT NULL DEFAULT 0;
+SET @stmt := (
+    SELECT IF(
+        EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = DATABASE() AND table_name = 'member_level' AND column_name = 'sort_order'
+        ),
+        'SELECT 1',
+        'ALTER TABLE member_level ADD COLUMN sort_order INT NOT NULL DEFAULT 0'
+    )
+);
+PREPARE column_stmt FROM @stmt; EXECUTE column_stmt; DEALLOCATE PREPARE column_stmt;
 
-ALTER TABLE member_level
-    ADD COLUMN IF NOT EXISTS status TINYINT NOT NULL DEFAULT 1;
+SET @stmt := (
+    SELECT IF(
+        EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = DATABASE() AND table_name = 'member_level' AND column_name = 'status'
+        ),
+        'SELECT 1',
+        'ALTER TABLE member_level ADD COLUMN status TINYINT NOT NULL DEFAULT 1'
+    )
+);
+PREPARE column_stmt FROM @stmt; EXECUTE column_stmt; DEALLOCATE PREPARE column_stmt;
 
-ALTER TABLE member_level
-    ADD COLUMN IF NOT EXISTS created_at DATETIME DEFAULT CURRENT_TIMESTAMP;
+SET @stmt := (
+    SELECT IF(
+        EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = DATABASE() AND table_name = 'member_level' AND column_name = 'created_at'
+        ),
+        'SELECT 1',
+        'ALTER TABLE member_level ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP'
+    )
+);
+PREPARE column_stmt FROM @stmt; EXECUTE column_stmt; DEALLOCATE PREPARE column_stmt;
 
-ALTER TABLE member_level
-    ADD COLUMN IF NOT EXISTS updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+SET @stmt := (
+    SELECT IF(
+        EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = DATABASE() AND table_name = 'member_level' AND column_name = 'updated_at'
+        ),
+        'SELECT 1',
+        'ALTER TABLE member_level ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'
+    )
+);
+PREPARE column_stmt FROM @stmt; EXECUTE column_stmt; DEALLOCATE PREPARE column_stmt;
 
-ALTER TABLE points_rule
-    ADD COLUMN IF NOT EXISTS earn_per_yuan INT NOT NULL DEFAULT 10;
+-- Align existing points_rule columns
+SET @stmt := (
+    SELECT IF(
+        EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = DATABASE() AND table_name = 'points_rule' AND column_name = 'earn_per_yuan'
+        ),
+        'SELECT 1',
+        'ALTER TABLE points_rule ADD COLUMN earn_per_yuan INT NOT NULL DEFAULT 10'
+    )
+);
+PREPARE column_stmt FROM @stmt; EXECUTE column_stmt; DEALLOCATE PREPARE column_stmt;
 
-ALTER TABLE points_rule
-    ADD COLUMN IF NOT EXISTS redeem_points INT NOT NULL DEFAULT 100;
+SET @stmt := (
+    SELECT IF(
+        EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = DATABASE() AND table_name = 'points_rule' AND column_name = 'redeem_points'
+        ),
+        'SELECT 1',
+        'ALTER TABLE points_rule ADD COLUMN redeem_points INT NOT NULL DEFAULT 100'
+    )
+);
+PREPARE column_stmt FROM @stmt; EXECUTE column_stmt; DEALLOCATE PREPARE column_stmt;
 
-ALTER TABLE points_rule
-    ADD COLUMN IF NOT EXISTS redeem_yuan DECIMAL(10,2) NOT NULL DEFAULT 1.00;
+SET @stmt := (
+    SELECT IF(
+        EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = DATABASE() AND table_name = 'points_rule' AND column_name = 'redeem_yuan'
+        ),
+        'SELECT 1',
+        'ALTER TABLE points_rule ADD COLUMN redeem_yuan DECIMAL(10,2) NOT NULL DEFAULT 1.00'
+    )
+);
+PREPARE column_stmt FROM @stmt; EXECUTE column_stmt; DEALLOCATE PREPARE column_stmt;
 
-ALTER TABLE points_rule
-    ADD COLUMN IF NOT EXISTS status TINYINT NOT NULL DEFAULT 1;
+SET @stmt := (
+    SELECT IF(
+        EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = DATABASE() AND table_name = 'points_rule' AND column_name = 'status'
+        ),
+        'SELECT 1',
+        'ALTER TABLE points_rule ADD COLUMN status TINYINT NOT NULL DEFAULT 1'
+    )
+);
+PREPARE column_stmt FROM @stmt; EXECUTE column_stmt; DEALLOCATE PREPARE column_stmt;
 
-ALTER TABLE points_rule
-    ADD COLUMN IF NOT EXISTS created_at DATETIME DEFAULT CURRENT_TIMESTAMP;
+SET @stmt := (
+    SELECT IF(
+        EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = DATABASE() AND table_name = 'points_rule' AND column_name = 'created_at'
+        ),
+        'SELECT 1',
+        'ALTER TABLE points_rule ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP'
+    )
+);
+PREPARE column_stmt FROM @stmt; EXECUTE column_stmt; DEALLOCATE PREPARE column_stmt;
 
-ALTER TABLE points_rule
-    ADD COLUMN IF NOT EXISTS updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+SET @stmt := (
+    SELECT IF(
+        EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = DATABASE() AND table_name = 'points_rule' AND column_name = 'updated_at'
+        ),
+        'SELECT 1',
+        'ALTER TABLE points_rule ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'
+    )
+);
+PREPARE column_stmt FROM @stmt; EXECUTE column_stmt; DEALLOCATE PREPARE column_stmt;
 
 INSERT INTO member_level(name, min_points, sort_order, status)
 VALUES ('普通', 0, 1, 1),
