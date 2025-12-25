@@ -17,6 +17,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -118,7 +120,7 @@ public class OrderServiceImpl implements OrderService {
         entity.setCustomerAddress(request.getCustomerAddress());
         entity.setRemark(request.getRemark());
         entity.setUserOpenid(request.getUserOpenid());
-        entity.setUserId(request.getUserId());
+        entity.setUserId(resolveUserId(request.getUserId()));
         entity.setStatus("NEW");
         entity.setPayStatus("UNPAID");
         Integer usedPoints = request.getUsedPoints();
@@ -384,7 +386,8 @@ public class OrderServiceImpl implements OrderService {
             return;
         }
 
-        Integer earnPerYuan = pointsRuleService.getActiveRule().getEarnPerYuan();
+        var activeRule = pointsRuleService.getActiveRule();
+        Integer earnPerYuan = activeRule != null ? activeRule.getEarnPerYuan() : null;
         int ratio = earnPerYuan == null ? 10 : earnPerYuan;
         int earnedPoints = actualAmount.multiply(BigDecimal.valueOf(ratio)).setScale(0, RoundingMode.FLOOR).intValue();
         int used = usedPoints == null ? 0 : usedPoints;
@@ -400,6 +403,19 @@ public class OrderServiceImpl implements OrderService {
         admin.setAvailablePoints(Math.max(currentAvailable + earnedPoints - used, 0));
         admin.setPoints(admin.getAvailablePoints());
         adminRepository.save(admin);
+    }
+
+    private Long resolveUserId(Long requestUserId) {
+        if (requestUserId != null) {
+            return requestUserId;
+        }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof Admin currentUser) {
+            return currentUser.getId();
+        }
+
+        return null;
     }
 
     private OrderDTO convertToDTO(OrderEntity entity) {
