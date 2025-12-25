@@ -21,36 +21,48 @@ import java.util.List;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtFilter jwtFilter) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtFilter jwtFilter, SecurityHeaderFilter securityHeaderFilter) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/member/**").permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/categories/**",
                                 "/api/products/**",
                                 "/api/marketing/coupons/**",
+                                "/api/banners/**",
+                                "/api/marketing/banners/**",
                                 "/api/promotions/**",
                                 "/api/marketing/promotions/**",
                                 "/api/orders/no/**",
                                 "/api/orders/*",
                                 "/api/orders",
                                 "/api/orders/**",
-                                "/api/coupons/**"
+                                "/api/coupons/**",
+                                "/api/addresses/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST,
                                 "/api/orders",
                                 "/api/orders/refund",
                                 "/api/marketing/coupons/claim",
-                                "/api/coupons/claim"
+                                "/api/coupons/claim",
+                                "/api/addresses/**"
+                        ).permitAll()
+                        .requestMatchers(HttpMethod.PUT,
+                                "/api/addresses/**"
+                        ).permitAll()
+                        .requestMatchers(HttpMethod.DELETE,
+                                "/api/addresses/**"
                         ).permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .anyRequest().authenticated()
                 );
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterAfter(securityHeaderFilter, JwtFilter.class);
 
         return http.build();
     }

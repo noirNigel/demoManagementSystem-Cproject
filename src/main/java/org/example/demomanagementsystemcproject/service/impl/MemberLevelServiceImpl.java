@@ -30,7 +30,6 @@ public class MemberLevelServiceImpl implements MemberLevelService {
     public List<MemberLevelDTO> getAllLevels() {
         logger.info("开始查询所有会员等级");
 
-        // 修改：查询所有会员等级，不限制状态，按最小积分升序排序
         List<MemberLevelEntity> entities = memberLevelRepository.findAll(Sort.by(Sort.Direction.ASC, "minPoints"));
 
         logger.info("查询到会员等级数量: {}", entities.size());
@@ -105,19 +104,14 @@ public class MemberLevelServiceImpl implements MemberLevelService {
 
     @Override
     public MemberLevelDTO getUserLevel(Integer points) {
-        // 修改：查询所有状态，不限制为1
-        List<MemberLevelEntity> levels = memberLevelRepository.findByStatusIsNotNullOrderByMinPointsDesc();
-        if (levels.isEmpty()) {
-            return null;
-        }
-        // 返回积分要求最高的等级
-        return convertToDTO(levels.get(0));
+        List<MemberLevelEntity> levels = memberLevelRepository.findActiveLevels();
+        return resolveLevel(points, levels);
     }
 
     @Override
     public BigDecimal calculateMemberPrice(BigDecimal originalPrice, Integer userPoints) {
         MemberLevelDTO level = getUserLevel(userPoints);
-        if (level == null) {
+        if (level == null || level.getDiscountRate() == null) {
             return originalPrice;
         }
 
@@ -127,12 +121,29 @@ public class MemberLevelServiceImpl implements MemberLevelService {
     @Override
     public Integer calculateEarnedPoints(BigDecimal orderAmount, Integer userPoints) {
         MemberLevelDTO level = getUserLevel(userPoints);
-        if (level == null) {
+        if (level == null || level.getPointsMultiplier() == null) {
             return orderAmount.intValue();
         }
 
         BigDecimal points = orderAmount.multiply(level.getPointsMultiplier());
         return points.intValue();
+    }
+
+    @Override
+    public List<MemberLevelDTO> getActiveLevels() {
+        return memberLevelRepository.findActiveLevels().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    private MemberLevelDTO resolveLevel(Integer points, List<MemberLevelEntity> levels) {
+        return levels.stream()
+                .filter(level -> level.getMinPoints() != null && level.getMinPoints() <= points)
+                .max((a, b) -> Integer.compare(
+                        a.getMinPoints() == null ? 0 : a.getMinPoints(),
+                        b.getMinPoints() == null ? 0 : b.getMinPoints()))
+                .map(this::convertToDTO)
+                .orElse(null);
     }
 
     private void validateLevel(MemberLevelDTO levelDTO) {

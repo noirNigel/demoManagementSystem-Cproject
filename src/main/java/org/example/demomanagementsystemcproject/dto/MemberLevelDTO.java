@@ -9,6 +9,8 @@ public class MemberLevelDTO {
     private BigDecimal discountRate;
     private BigDecimal pointsMultiplier;
     private String birthdayBenefit;
+    private String benefits;
+    private Integer sortOrder;
     private Integer status;
 
     // 扩展字段
@@ -28,6 +30,10 @@ public class MemberLevelDTO {
     public void setPointsMultiplier(BigDecimal pointsMultiplier) { this.pointsMultiplier = pointsMultiplier; }
     public String getBirthdayBenefit() { return birthdayBenefit; }
     public void setBirthdayBenefit(String birthdayBenefit) { this.birthdayBenefit = birthdayBenefit; }
+    public String getBenefits() { return benefits; }
+    public void setBenefits(String benefits) { this.benefits = benefits; }
+    public Integer getSortOrder() { return sortOrder; }
+    public void setSortOrder(Integer sortOrder) { this.sortOrder = sortOrder; }
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }
     public String getStatusText() { return statusText; }
