@@ -206,6 +206,9 @@ public class OrderServiceImpl implements OrderService {
         entity.setTotalAmount(payAmount);
         entity.setPayStatus("PAID");
         entity.setPaymentTime(LocalDateTime.now());
+        if (entity.getPointsUsed() == null) {
+            entity.setPointsUsed(0);
+        }
         OrderEntity saved = orderRepository.save(entity);
 
         handlePointsOnPayment(entity.getUserId(), payAmount, usedPoints);
