@@ -17,6 +17,9 @@ public class OrderEntity {
     @Column(name = "user_openid")
     private String userOpenid;
 
+    @Column(name = "user_id")
+    private Long userId;
+
     @Column(name = "total_amount", precision = 12, scale = 2)
     private BigDecimal totalAmount;
 
@@ -40,6 +43,9 @@ public class OrderEntity {
 
     @Column(name = "pay_status")
     private String payStatus; // UNPAID, PAID, REFUNDED
+
+    @Column(name = "points_used")
+    private Integer pointsUsed;
 
     @Column(name = "customer_name")
     private String customerName;
@@ -107,6 +113,9 @@ public class OrderEntity {
     public String getUserOpenid() { return userOpenid; }
     public void setUserOpenid(String userOpenid) { this.userOpenid = userOpenid; }
 
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
+
     public BigDecimal getTotalAmount() { return totalAmount; }
     public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
 
@@ -130,6 +139,9 @@ public class OrderEntity {
 
     public String getPayStatus() { return payStatus; }
     public void setPayStatus(String payStatus) { this.payStatus = payStatus; }
+
+    public Integer getPointsUsed() { return pointsUsed; }
+    public void setPointsUsed(Integer pointsUsed) { this.pointsUsed = pointsUsed; }
 
     public String getCustomerName() { return customerName; }
     public void setCustomerName(String customerName) { this.customerName = customerName; }

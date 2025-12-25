@@ -22,6 +22,31 @@ CREATE TABLE IF NOT EXISTS points_rule (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- Align admin table with growth points & available points separation
+SET @stmt := (
+    SELECT IF(
+        EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = DATABASE() AND table_name = 'admin' AND column_name = 'level_points'
+        ),
+        'SELECT 1',
+        "ALTER TABLE admin ADD COLUMN level_points INT NOT NULL DEFAULT 0 COMMENT '成长积分(用于等级,只增不减)'"
+    )
+);
+PREPARE column_stmt FROM @stmt; EXECUTE column_stmt; DEALLOCATE PREPARE column_stmt;
+
+SET @stmt := (
+    SELECT IF(
+        EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = DATABASE() AND table_name = 'admin' AND column_name = 'available_points'
+        ),
+        'SELECT 1',
+        "ALTER TABLE admin ADD COLUMN available_points INT NOT NULL DEFAULT 0 COMMENT '可用积分(抵扣用,可减少)'"
+    )
+);
+PREPARE column_stmt FROM @stmt; EXECUTE column_stmt; DEALLOCATE PREPARE column_stmt;
+
 -- Align existing member_level columns without depending on ADD COLUMN IF NOT EXISTS
 SET @stmt := (
     SELECT IF(
@@ -200,6 +225,31 @@ SET @stmt := (
         ),
         'SELECT 1',
         'ALTER TABLE points_rule ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'
+    )
+);
+PREPARE column_stmt FROM @stmt; EXECUTE column_stmt; DEALLOCATE PREPARE column_stmt;
+
+-- Track points usage and ownership on orders
+SET @stmt := (
+    SELECT IF(
+        EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = DATABASE() AND table_name = 'orders' AND column_name = 'user_id'
+        ),
+        'SELECT 1',
+        'ALTER TABLE orders ADD COLUMN user_id BIGINT NULL COMMENT "下单会员ID"'
+    )
+);
+PREPARE column_stmt FROM @stmt; EXECUTE column_stmt; DEALLOCATE PREPARE column_stmt;
+
+SET @stmt := (
+    SELECT IF(
+        EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = DATABASE() AND table_name = 'orders' AND column_name = 'points_used'
+        ),
+        'SELECT 1',
+        'ALTER TABLE orders ADD COLUMN points_used INT NOT NULL DEFAULT 0 COMMENT "下单时使用的积分"'
     )
 );
 PREPARE column_stmt FROM @stmt; EXECUTE column_stmt; DEALLOCATE PREPARE column_stmt;

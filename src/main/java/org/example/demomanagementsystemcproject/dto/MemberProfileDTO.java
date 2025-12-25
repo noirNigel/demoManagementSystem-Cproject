@@ -8,8 +8,11 @@ public class MemberProfileDTO {
     public static class UserSnapshot {
         private Long id;
         private Integer points;
+        private Integer levelPoints;
+        private Integer availablePoints;
         private BigDecimal balance;
         private String level;
+        private String levelName;
         private Integer levelMinPoints;
         private String nextLevel;
         private Integer nextLevelMinPoints;
@@ -30,6 +33,22 @@ public class MemberProfileDTO {
             this.points = points;
         }
 
+        public Integer getLevelPoints() {
+            return levelPoints;
+        }
+
+        public void setLevelPoints(Integer levelPoints) {
+            this.levelPoints = levelPoints;
+        }
+
+        public Integer getAvailablePoints() {
+            return availablePoints;
+        }
+
+        public void setAvailablePoints(Integer availablePoints) {
+            this.availablePoints = availablePoints;
+        }
+
         public BigDecimal getBalance() {
             return balance;
         }
@@ -44,6 +63,14 @@ public class MemberProfileDTO {
 
         public void setLevel(String level) {
             this.level = level;
+        }
+
+        public String getLevelName() {
+            return levelName;
+        }
+
+        public void setLevelName(String levelName) {
+            this.levelName = levelName;
         }
 
         public Integer getLevelMinPoints() {
