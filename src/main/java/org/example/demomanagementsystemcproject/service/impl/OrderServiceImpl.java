@@ -127,21 +127,26 @@ public class OrderServiceImpl implements OrderService {
         entity.setUserId(userId);
         entity.setStatus("NEW");
         entity.setPayStatus("UNPAID");
-        Integer usedPoints = request.getUsedPoints();
-        if (usedPoints == null || usedPoints < 0) {
-            usedPoints = 0;
+
+        // 积分抵扣：后端兜底允许的最大抵扣 = 当前可用积分，防止超扣导致异常
+        Admin admin = adminRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("找不到对应的用户"));
+        Integer requestedPoints = request.getUsedPoints();
+        if (requestedPoints == null || requestedPoints < 0) {
+            requestedPoints = 0;
         }
-        entity.setPointsUsed(usedPoints);
+        int currentAvailable = admin.getAvailablePoints() == null
+                ? (admin.getPoints() == null ? 0 : admin.getPoints())
+                : admin.getAvailablePoints();
+        int allowedUsedPoints = Math.min(requestedPoints, currentAvailable);
+        entity.setPointsUsed(allowedUsedPoints);
 
         BigDecimal goodsAmount = request.getGoodsAmount();
         BigDecimal discountAmount = request.getDiscountAmount();
         if (discountAmount == null) {
             discountAmount = request.getCouponDiscountAmount();
         }
-        BigDecimal pointsDiscountAmount = request.getPointsDiscountAmount();
-        if (pointsDiscountAmount == null) {
-            pointsDiscountAmount = BigDecimal.ZERO;
-        }
+        BigDecimal pointsDiscountAmount = calculatePointsDiscountAmount(allowedUsedPoints);
 
         BigDecimal computedGoods = BigDecimal.ZERO;
         List<OrderItemEntity> items = new ArrayList<>();
@@ -426,6 +431,27 @@ public class OrderServiceImpl implements OrderService {
         admin.setPoints(admin.getAvailablePoints());
         adminRepository.save(admin);
         return earnedPoints;
+    }
+
+    private BigDecimal calculatePointsDiscountAmount(int usedPoints) {
+        if (usedPoints <= 0) {
+            return BigDecimal.ZERO;
+        }
+
+        var activeRule = pointsRuleService.getActiveRule();
+        if (activeRule == null || activeRule.getRedeemPoints() == null || activeRule.getRedeemYuan() == null) {
+            return BigDecimal.ZERO;
+        }
+
+        int redeemPoints = activeRule.getRedeemPoints();
+        if (redeemPoints <= 0) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal redeemYuan = BigDecimal.valueOf(activeRule.getRedeemYuan());
+        BigDecimal groups = BigDecimal.valueOf(usedPoints)
+                .divide(BigDecimal.valueOf(redeemPoints), 0, RoundingMode.DOWN);
+        return redeemYuan.multiply(groups);
     }
 
     private Long resolveUserId(Long requestUserId) {
