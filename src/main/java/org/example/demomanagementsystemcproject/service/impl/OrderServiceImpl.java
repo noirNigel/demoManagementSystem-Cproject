@@ -128,7 +128,7 @@ public class OrderServiceImpl implements OrderService {
         entity.setStatus("NEW");
         entity.setPayStatus("UNPAID");
         Integer usedPoints = request.getUsedPoints();
-        if (usedPoints == null) {
+        if (usedPoints == null || usedPoints < 0) {
             usedPoints = 0;
         }
         entity.setPointsUsed(usedPoints);
@@ -201,8 +201,15 @@ public class OrderServiceImpl implements OrderService {
         }
 
         BigDecimal payAmount = request.getTotalAmount();
+        BigDecimal computedPay = goodsAmount.subtract(discountAmount).subtract(pointsDiscountAmount);
+        if (computedPay.compareTo(BigDecimal.ZERO) < 0) {
+            computedPay = BigDecimal.ZERO;
+        }
         if (payAmount == null) {
-            payAmount = goodsAmount.subtract(discountAmount);
+            payAmount = computedPay;
+        } else if (payAmount.compareTo(computedPay) != 0) {
+            // 后端强制以自身计算为准，防止前端篡改
+            payAmount = computedPay;
         }
         if (payAmount.compareTo(BigDecimal.ZERO) < 0) {
             payAmount = BigDecimal.ZERO;

@@ -25,7 +25,13 @@ public class OrderController {
     }
 
     @PostMapping
-    public ResponseEntity<OrderDTO> createOrder(@RequestBody OrderDTO request) {
+    public ResponseEntity<OrderDTO> createOrder(
+            @RequestBody OrderDTO request,
+            @RequestHeader(value = "X-User-Id", required = false) String userIdHeader
+    ) {
+        if (request.getUserId() == null && userIdHeader != null && !userIdHeader.isBlank()) {
+            request.setUserId(Long.valueOf(userIdHeader));
+        }
         return ResponseEntity.ok(orderService.createOrder(request));
     }
 
