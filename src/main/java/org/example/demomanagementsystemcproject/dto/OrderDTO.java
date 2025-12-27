@@ -8,6 +8,7 @@ public class OrderDTO {
     private Long id;
     private String orderNo;
     private String userOpenid;
+    private Long userId;
     private BigDecimal totalAmount;
     private String status;
     private String payStatus;
@@ -16,12 +17,16 @@ public class OrderDTO {
     private String customerAddress;
     private String remark;
 
+    private Integer usedPoints;
+
     // 价格与优惠信息
     private BigDecimal goodsAmount;
     private BigDecimal discountAmount;
+    private BigDecimal pointsDiscountAmount;
     private Long couponId;
     private Long userCouponId;
     private BigDecimal couponDiscountAmount;
+    private Integer earnedPoints;
     private LocalDateTime paymentTime;
     private LocalDateTime confirmedTime;
     private LocalDateTime completedTime;
@@ -44,6 +49,9 @@ public class OrderDTO {
     public String getUserOpenid() { return userOpenid; }
     public void setUserOpenid(String userOpenid) { this.userOpenid = userOpenid; }
 
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
+
     public BigDecimal getTotalAmount() { return totalAmount; }
     public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
 
@@ -65,11 +73,17 @@ public class OrderDTO {
     public String getRemark() { return remark; }
     public void setRemark(String remark) { this.remark = remark; }
 
+    public Integer getUsedPoints() { return usedPoints; }
+    public void setUsedPoints(Integer usedPoints) { this.usedPoints = usedPoints; }
+
     public BigDecimal getGoodsAmount() { return goodsAmount; }
     public void setGoodsAmount(BigDecimal goodsAmount) { this.goodsAmount = goodsAmount; }
 
     public BigDecimal getDiscountAmount() { return discountAmount; }
     public void setDiscountAmount(BigDecimal discountAmount) { this.discountAmount = discountAmount; }
+
+    public BigDecimal getPointsDiscountAmount() { return pointsDiscountAmount; }
+    public void setPointsDiscountAmount(BigDecimal pointsDiscountAmount) { this.pointsDiscountAmount = pointsDiscountAmount; }
 
     public Long getCouponId() { return couponId; }
     public void setCouponId(Long couponId) { this.couponId = couponId; }
@@ -79,6 +93,9 @@ public class OrderDTO {
 
     public BigDecimal getCouponDiscountAmount() { return couponDiscountAmount; }
     public void setCouponDiscountAmount(BigDecimal couponDiscountAmount) { this.couponDiscountAmount = couponDiscountAmount; }
+
+    public Integer getEarnedPoints() { return earnedPoints; }
+    public void setEarnedPoints(Integer earnedPoints) { this.earnedPoints = earnedPoints; }
 
     public LocalDateTime getPaymentTime() { return paymentTime; }
     public void setPaymentTime(LocalDateTime paymentTime) { this.paymentTime = paymentTime; }

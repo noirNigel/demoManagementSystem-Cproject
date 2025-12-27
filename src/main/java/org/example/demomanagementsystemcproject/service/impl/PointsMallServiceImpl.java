@@ -2,10 +2,12 @@ package org.example.demomanagementsystemcproject.service.impl;
 
 import org.example.demomanagementsystemcproject.dto.PointsGoodsDTO;
 import org.example.demomanagementsystemcproject.dto.PointsExchangeDTO;
+import org.example.demomanagementsystemcproject.entity.Admin;
 import org.example.demomanagementsystemcproject.entity.PointsGoodsEntity;
 import org.example.demomanagementsystemcproject.entity.PointsExchangeEntity;
 import org.example.demomanagementsystemcproject.repo.PointsGoodsRepository;
 import org.example.demomanagementsystemcproject.repo.PointsExchangeRepository;
+import org.example.demomanagementsystemcproject.repository.AdminRepository;
 import org.example.demomanagementsystemcproject.service.PointsMallService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
@@ -23,11 +25,14 @@ public class PointsMallServiceImpl implements PointsMallService {
 
     private final PointsGoodsRepository pointsGoodsRepository;
     private final PointsExchangeRepository pointsExchangeRepository;
+    private final AdminRepository adminRepository;
 
     public PointsMallServiceImpl(PointsGoodsRepository pointsGoodsRepository,
-                                 PointsExchangeRepository pointsExchangeRepository) {
+                                 PointsExchangeRepository pointsExchangeRepository,
+                                 AdminRepository adminRepository) {
         this.pointsGoodsRepository = pointsGoodsRepository;
         this.pointsExchangeRepository = pointsExchangeRepository;
+        this.adminRepository = adminRepository;
     }
 
     @Override
@@ -259,15 +264,18 @@ public class PointsMallServiceImpl implements PointsMallService {
         return dto;
     }
 
-    // 以下方法需要集成用户服务
     private Integer getUserPoints(Long userId) {
-        // 这里应该调用用户服务获取用户积分
-        // 暂时返回一个模拟值
-        return 1000;
+        Admin admin = adminRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("用户不存在"));
+        return admin.getAvailablePoints() == null ? 0 : admin.getAvailablePoints();
     }
 
     private void deductUserPoints(Long userId, Integer points) {
-        // 这里应该调用用户服务扣除用户积分
-        // 暂时模拟实现
+        Admin admin = adminRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("用户不存在"));
+        Integer current = admin.getAvailablePoints() == null ? 0 : admin.getAvailablePoints();
+        int next = current - points;
+        admin.setAvailablePoints(Math.max(next, 0));
+        adminRepository.save(admin);
     }
 }

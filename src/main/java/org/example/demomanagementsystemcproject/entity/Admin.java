@@ -55,6 +55,14 @@ public class Admin {
     @Column(name = "points")
     private Integer points = 0;
 
+    /** 成长积分(用于等级，累计不减) */
+    @Column(name = "level_points")
+    private Integer levelPoints = 0;
+
+    /** 可用积分余额（抵扣用，可减少） */
+    @Column(name = "available_points")
+    private Integer availablePoints = 0;
+
     /** 创建时间 */
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -72,6 +80,12 @@ public class Admin {
         }
         if (this.points == null) {
             this.points = 0;
+        }
+        if (this.levelPoints == null) {
+            this.levelPoints = 0;
+        }
+        if (this.availablePoints == null) {
+            this.availablePoints = 0;
         }
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
@@ -178,6 +192,22 @@ public class Admin {
 
     public void setPoints(Integer points) {
         this.points = points;
+    }
+
+    public Integer getLevelPoints() {
+        return levelPoints;
+    }
+
+    public void setLevelPoints(Integer levelPoints) {
+        this.levelPoints = levelPoints;
+    }
+
+    public Integer getAvailablePoints() {
+        return availablePoints;
+    }
+
+    public void setAvailablePoints(Integer availablePoints) {
+        this.availablePoints = availablePoints;
     }
 
     public LocalDateTime getCreatedAt() {

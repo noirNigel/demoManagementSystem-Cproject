@@ -1,24 +1,30 @@
 package org.example.demomanagementsystemcproject.service.impl;
 
 import org.example.demomanagementsystemcproject.dto.*;
+import org.example.demomanagementsystemcproject.entity.Admin;
 import org.example.demomanagementsystemcproject.entity.OrderEntity;
 import org.example.demomanagementsystemcproject.entity.OrderItemEntity;
 import org.example.demomanagementsystemcproject.entity.ProductEntity;
 import org.example.demomanagementsystemcproject.repo.OrderRepository;
 import org.example.demomanagementsystemcproject.repo.OrderItemRepository;
 import org.example.demomanagementsystemcproject.repo.ProductRepository;
+import org.example.demomanagementsystemcproject.repository.AdminRepository;
 import org.example.demomanagementsystemcproject.service.OrderService;
+import org.example.demomanagementsystemcproject.service.PointsRuleService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.criteria.Predicate;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -32,12 +38,18 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final ProductRepository productRepository;
+    private final AdminRepository adminRepository;
+    private final PointsRuleService pointsRuleService;
 
     public OrderServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository,
-                            ProductRepository productRepository) {
+                            ProductRepository productRepository,
+                            AdminRepository adminRepository,
+                            PointsRuleService pointsRuleService) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.productRepository = productRepository;
+        this.adminRepository = adminRepository;
+        this.pointsRuleService = pointsRuleService;
     }
 
     @Override
@@ -108,13 +120,27 @@ public class OrderServiceImpl implements OrderService {
         entity.setCustomerAddress(request.getCustomerAddress());
         entity.setRemark(request.getRemark());
         entity.setUserOpenid(request.getUserOpenid());
+        Long userId = resolveUserId(request.getUserId());
+        if (userId == null) {
+            throw new RuntimeException("订单需要关联用户信息");
+        }
+        entity.setUserId(userId);
         entity.setStatus("NEW");
         entity.setPayStatus("UNPAID");
+        Integer usedPoints = request.getUsedPoints();
+        if (usedPoints == null) {
+            usedPoints = 0;
+        }
+        entity.setPointsUsed(usedPoints);
 
         BigDecimal goodsAmount = request.getGoodsAmount();
         BigDecimal discountAmount = request.getDiscountAmount();
         if (discountAmount == null) {
             discountAmount = request.getCouponDiscountAmount();
+        }
+        BigDecimal pointsDiscountAmount = request.getPointsDiscountAmount();
+        if (pointsDiscountAmount == null) {
+            pointsDiscountAmount = BigDecimal.ZERO;
         }
 
         BigDecimal computedGoods = BigDecimal.ZERO;
@@ -188,6 +214,15 @@ public class OrderServiceImpl implements OrderService {
         entity.setUserCouponId(request.getUserCouponId());
         entity.setCouponDiscountAmount(request.getCouponDiscountAmount());
         entity.setTotalAmount(payAmount);
+        entity.setPointsDiscountAmount(pointsDiscountAmount);
+        entity.setPayStatus("PAID");
+        entity.setPaymentTime(LocalDateTime.now());
+        if (entity.getPointsUsed() == null) {
+            entity.setPointsUsed(0);
+        }
+        int earnedPoints = applyPointsSettlement(userId, payAmount, usedPoints);
+        entity.setEarnedPoints(earnedPoints);
+
         OrderEntity saved = orderRepository.save(entity);
 
         for (OrderItemEntity item : items) {
@@ -351,9 +386,60 @@ public class OrderServiceImpl implements OrderService {
         return csv.toString().getBytes();
     }
 
+    private int applyPointsSettlement(Long userId, BigDecimal actualAmount, Integer usedPoints) {
+        if (userId == null) {
+            throw new RuntimeException("订单需要关联用户信息");
+        }
+        if (actualAmount == null) {
+            actualAmount = BigDecimal.ZERO;
+        }
+
+        Admin admin = adminRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("找不到对应的用户"));
+
+        var activeRule = pointsRuleService.getActiveRule();
+        Integer earnPerYuan = activeRule != null ? activeRule.getEarnPerYuan() : null;
+        int ratio = earnPerYuan == null ? 10 : earnPerYuan;
+        int earnedPoints = actualAmount.multiply(BigDecimal.valueOf(ratio)).setScale(0, RoundingMode.FLOOR).intValue();
+        int used = usedPoints == null ? 0 : usedPoints;
+
+        int currentLevel = admin.getLevelPoints() == null
+                ? (admin.getPoints() == null ? 0 : admin.getPoints())
+                : admin.getLevelPoints();
+        int currentAvailable = admin.getAvailablePoints() == null
+                ? (admin.getPoints() == null ? 0 : admin.getPoints())
+                : admin.getAvailablePoints();
+
+        if (used > currentAvailable) {
+            throw new RuntimeException("积分不足");
+        }
+
+        admin.setLevelPoints(currentLevel + earnedPoints);
+        admin.setAvailablePoints(Math.max(currentAvailable + earnedPoints - used, 0));
+        admin.setPoints(admin.getAvailablePoints());
+        adminRepository.save(admin);
+        return earnedPoints;
+    }
+
+    private Long resolveUserId(Long requestUserId) {
+        if (requestUserId != null) {
+            return requestUserId;
+        }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof Admin currentUser) {
+            return currentUser.getId();
+        }
+
+        return null;
+    }
+
     private OrderDTO convertToDTO(OrderEntity entity) {
         OrderDTO dto = new OrderDTO();
         BeanUtils.copyProperties(entity, dto);
+        dto.setUsedPoints(entity.getPointsUsed());
+        dto.setPointsDiscountAmount(entity.getPointsDiscountAmount());
+        dto.setEarnedPoints(entity.getEarnedPoints());
 
         // 加载订单项
         List<OrderItemEntity> items = orderItemRepository.findByOrderId(entity.getId());

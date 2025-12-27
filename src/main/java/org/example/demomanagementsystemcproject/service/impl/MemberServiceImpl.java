@@ -39,18 +39,24 @@ public class MemberServiceImpl implements MemberService {
         Admin user = adminRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
 
-        Integer userPoints = Optional.ofNullable(user.getPoints()).orElse(0);
+        Integer levelPoints = Optional.ofNullable(user.getLevelPoints())
+                .orElse(Optional.ofNullable(user.getPoints()).orElse(0));
+        Integer availablePoints = Optional.ofNullable(user.getAvailablePoints())
+                .orElse(Optional.ofNullable(user.getPoints()).orElse(0));
         PointsRuleDTO rule = pointsRuleService.getActiveRule();
         List<MemberLevelDTO> activeLevels = memberLevelService.getActiveLevels();
 
-        MemberLevelDTO currentLevel = resolveCurrentLevel(userPoints, activeLevels);
-        MemberLevelDTO nextLevel = resolveNextLevel(userPoints, activeLevels);
+        MemberLevelDTO currentLevel = resolveCurrentLevel(levelPoints, activeLevels);
+        MemberLevelDTO nextLevel = resolveNextLevel(levelPoints, activeLevels);
 
         MemberProfileDTO.UserSnapshot snapshot = new MemberProfileDTO.UserSnapshot();
         snapshot.setId(user.getId());
-        snapshot.setPoints(userPoints);
+        snapshot.setPoints(availablePoints);
+        snapshot.setLevelPoints(levelPoints);
+        snapshot.setAvailablePoints(availablePoints);
         snapshot.setBalance(BigDecimal.ZERO);
         snapshot.setLevel(currentLevel != null ? currentLevel.getName() : "普通");
+        snapshot.setLevelName(snapshot.getLevel());
         snapshot.setLevelMinPoints(currentLevel != null ? currentLevel.getMinPoints() : 0);
         snapshot.setNextLevel(nextLevel != null ? nextLevel.getName() : null);
         snapshot.setNextLevelMinPoints(nextLevel != null ? nextLevel.getMinPoints() : null);
@@ -60,8 +66,8 @@ public class MemberServiceImpl implements MemberService {
         response.setRules(rule);
         response.setLevels(activeLevels);
 
-        log.info("生成会员信息: userId={}, points={}, level={}, nextLevel={}", userId, userPoints,
-                snapshot.getLevel(), snapshot.getNextLevel());
+        log.info("生成会员信息: userId={}, levelPoints={}, availablePoints={}, level={}, nextLevel={}",
+                userId, levelPoints, availablePoints, snapshot.getLevel(), snapshot.getNextLevel());
         return response;
     }
 
