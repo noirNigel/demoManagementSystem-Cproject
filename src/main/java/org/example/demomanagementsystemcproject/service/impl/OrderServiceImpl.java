@@ -232,7 +232,7 @@ public class OrderServiceImpl implements OrderService {
         if (entity.getPointsUsed() == null) {
             entity.setPointsUsed(0);
         }
-        int earnedPoints = applyPointsSettlement(userId, payAmount, usedPoints);
+        int earnedPoints = applyPointsSettlement(userId, payAmount, allowedUsedPoints);
         entity.setEarnedPoints(earnedPoints);
 
         OrderEntity saved = orderRepository.save(entity);
@@ -448,7 +448,10 @@ public class OrderServiceImpl implements OrderService {
             return BigDecimal.ZERO;
         }
 
-        BigDecimal redeemYuan = BigDecimal.valueOf(activeRule.getRedeemYuan());
+        BigDecimal redeemYuan = activeRule.getRedeemYuan();
+        if (redeemYuan == null) {
+            return BigDecimal.ZERO;
+        }
         BigDecimal groups = BigDecimal.valueOf(usedPoints)
                 .divide(BigDecimal.valueOf(redeemPoints), 0, RoundingMode.DOWN);
         return redeemYuan.multiply(groups);
