@@ -59,6 +59,10 @@ public class MemberLevelServiceImpl implements MemberLevelService {
         MemberLevelEntity entity = new MemberLevelEntity();
         BeanUtils.copyProperties(levelDTO, entity);
 
+        if (entity.getSortOrder() == null) {
+            entity.setSortOrder(0);
+        }
+
         // 确保状态不为空，默认为启用状态
         if (entity.getStatus() == null) {
             entity.setStatus(1);
@@ -80,6 +84,11 @@ public class MemberLevelServiceImpl implements MemberLevelService {
         validateLevel(levelDTO);
 
         BeanUtils.copyProperties(levelDTO, entity, "id");
+
+        if (entity.getSortOrder() == null) {
+            entity.setSortOrder(0);
+        }
+
         MemberLevelEntity saved = memberLevelRepository.save(entity);
         return convertToDTO(saved);
     }
